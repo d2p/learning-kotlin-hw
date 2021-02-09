@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Assistant Reminder</string>
+    <string name="login_icon">login_icon</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="prompt_username">Username</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="create_reminder_button">Create Reminder</string>
+    <string name="logout_button">Logout</string>
+    <string name="reminder">Reminder</string>
+    <string name="author">Author</string>
+    <string name="preference_file" translatable="false">com.ouluuni21.assistedreminder.PREFERENCE_FILE</string>
+    <string name="dbFileName">com.ouluuni21.assistedreminder.dbFile</string>
+    <string name="reminders">Reminders</string>
+    <string name="new_reminder">New Reminder</string>
+    <string name="created_by">Created by</string>
+    <string name="date">Date</string>
+    <string name="create">Create</string>
+</resources>
