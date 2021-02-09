@@ -12,8 +12,8 @@
         android:layout_height="66dp"
         android:background="#0656CF"
         android:paddingLeft="10dp"
-        android:paddingRight="10dp"
         android:paddingTop="20dp"
+        android:paddingRight="10dp"
         android:text="@string/reminders"
         android:textAlignment="viewStart"
         android:textColor="#FFFFFF"
@@ -74,4 +74,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtRemindersHeader"
         app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/currentUser"
+        android:layout_width="152dp"
+        android:layout_height="23dp"
+        android:layout_marginStart="240dp"
+        android:gravity="right"
+        android:text="TextView"
+        android:textColor="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/txtRemindersHeader"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.022" />
 </androidx.constraintlayout.widget.ConstraintLayout>

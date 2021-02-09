@@ -4,7 +4,7 @@
     <string name="title_activity_login">LoginActivity</string>
     <string name="prompt_username">Username</string>
     <string name="prompt_password">Password</string>
-    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in">Login</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="create_reminder_button">Create Reminder</string>
     <string name="logout_button">Logout</string>
@@ -17,4 +17,8 @@
     <string name="created_by">Created by</string>
     <string name="date">Date</string>
     <string name="create">Create</string>
+    <string name="register_new_account">Register New Account</string>
+    <string name="repeat_password">Repeat password</string>
+    <string name="action_register">Register</string>
+    <string name="action_go_back_to_login"><u>Go back to login screen</u></string>
 </resources>

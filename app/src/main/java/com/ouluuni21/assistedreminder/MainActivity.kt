@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        showUser()
         refreshListView()
 
         listView = findViewById<ListView>(R.id.reminderListView)
@@ -75,8 +76,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun showUser() {
+        val sharedPref = applicationContext.getSharedPreferences(
+            getString(R.string.preference_file), MODE_PRIVATE
+        )
+        val currentUser = sharedPref.getString("Username", "")
+        val user = findViewById<TextView>(R.id.currentUser)
+        user.text = currentUser
+    }
+
     override fun onResume() {
         super.onResume()
+        showUser()
         refreshListView()
     }
 

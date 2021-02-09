@@ -16,6 +16,11 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
+        findViewById<Button>(R.id.btnRegisterL).setOnClickListener {
+            Log.d("hw_project", "Register button clicked")
+            this.startActivity(Intent(applicationContext, RegisterActivity::class.java))
+        }
+
         findViewById<Button>(R.id.login).setOnClickListener {
             Log.d("hw_project", "Login button clicked")
 
@@ -65,8 +70,8 @@ class LoginActivity : AppCompatActivity() {
             AsyncTask.execute {
                 val username = findViewById<EditText>(R.id.username).text.toString()
                 val password = findViewById<EditText>(R.id.password).text.toString()
-                val defUsername = sharedPref.getString("Username", "")
-                val defPassword = sharedPref.getString("Password", "")
+//                val defUsername = sharedPref.getString("Username", "")
+//                val defPassword = sharedPref.getString("Password", "")
 
                 val db = Room
                     .databaseBuilder(
@@ -81,6 +86,7 @@ class LoginActivity : AppCompatActivity() {
                 Log.d("hw_project", "Find by ${username} User: ${user?.username}, pass: ${user?.password}")
                 if( user?.username == username && user?.password == password) {
                     sharedPref.edit().putInt("LoginStatus", 1).apply()
+                    sharedPref.edit().putString("Username", username).apply()
                     this.startActivity(Intent(applicationContext, MainActivity::class.java))
                 }
             }
