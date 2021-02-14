@@ -21,4 +21,7 @@
     <string name="repeat_password">Repeat password</string>
     <string name="action_register">Register</string>
     <string name="action_go_back_to_login"><u>Go back to login screen</u></string>
+    <string name="update">Update</string>
+    <string name="edit_reminder">Edit Reminder</string>
+    <string name="input_reminder_text">Input reminder message</string>
 </resources>

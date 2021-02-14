@@ -1,16 +1,23 @@
 package com.ouluuni21.assistedreminder
 
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.AsyncTask
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.NotificationCompat
 import androidx.room.Room
 import com.ouluuni21.assistedreminder.db.AppDatabase
-import com.ouluuni21.assistedreminder.db.ReminderInfo
+import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,11 +30,11 @@ class MainActivity : AppCompatActivity() {
         refreshListView()
 
         listView = findViewById<ListView>(R.id.reminderListView)
-        listView.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, id ->
+        listView.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             // Retrieve selected Item
-            val selectedReminder = listView.adapter.getItem(position) as ReminderInfo
+            val selectedReminder = listView.adapter.getItem(position) as Reminder
             val message =
-                "Do you want to delete ${selectedReminder.uid} reminder, on ${selectedReminder.date} from ${selectedReminder.author} ?"
+                "Do you want to delete ${selectedReminder.uid} reminder on ${selectedReminder.reminder_time} from ${selectedReminder.creator} ?"
 
             // Show AlertDialog to delete the reminder
             val builder = AlertDialog.Builder(this@MainActivity)
@@ -45,14 +52,18 @@ class MainActivity : AppCompatActivity() {
                                 getString(R.string.dbFileName)
                             )
                             .build()
-                        db.reminderDao().delete(selectedReminder.uid!!)
+                        db.reminderDao().delete(selectedReminder.uid)
                         db.close()
                     }
                     // Cancel pending time based reminder
-                    // cancelReminder(applicationContext, selectedReminder.uid!!)
+                    cancelReminder(applicationContext, selectedReminder.uid)
 
                     // Refresh payments list
                     refreshListView()
+                }
+                .setNeutralButton("Edit") { _, _ ->
+                    // Go to editing activity
+                    editReminder(this, selectedReminder.uid)
                 }
                 .setNegativeButton("Cancel") { dialog, _ ->
                     // Do nothing
@@ -104,8 +115,8 @@ class MainActivity : AppCompatActivity() {
         return 1
     }
 
-    inner class LoadReminderInfoEntries : AsyncTask<String?, String?, List<ReminderInfo>>() {
-        override fun doInBackground(vararg params: String?): List<ReminderInfo> {
+    inner class LoadReminderInfoEntries : AsyncTask<String?, String?, List<Reminder>>() {
+        override fun doInBackground(vararg params: String?): List<Reminder> {
             val db = Room
                 .databaseBuilder(
                     applicationContext,
@@ -119,7 +130,7 @@ class MainActivity : AppCompatActivity() {
             return reminderInfos
         }
 
-        override fun onPostExecute(reminderInfos: List<ReminderInfo>?) {
+        override fun onPostExecute(reminderInfos: List<Reminder>?) {
             super.onPostExecute(reminderInfos)
             if (reminderInfos != null) {
                 if (reminderInfos.isNotEmpty()) {
@@ -138,12 +149,81 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        private fun dummyList(): List<ReminderInfo> {
-            val reminderInfos = mutableListOf<ReminderInfo>()
+        private fun dummyList(): List<Reminder> {
+            val reminderInfos = mutableListOf<Reminder>()
             for (i in 0 until 10) {
-                reminderInfos += ReminderInfo(i, "Author " + i, "01/01/2021", "Dummy reminder text entry")
+                reminderInfos += Reminder(i, "Author " + i, "01/01/2021", "Dummy reminder text entry")
             }
             return reminderInfos
+        }
+    }
+
+    companion object {
+        fun showNofitication(context: Context, message: String) {
+
+            val CHANNEL_ID = "REMINDER_APP_NOTIFICATION_CHANNEL"
+            val notificationId = Random.nextInt(10, 1000) + 5
+            // notificationId += Random(notificationId).nextInt(1, 500)
+
+            val notificationBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_notif)
+                    .setContentTitle(context.getString(R.string.app_name))
+                    .setContentText(message)
+                    .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setGroup(CHANNEL_ID)
+
+            val notificationManager =
+                    context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            // Notification channel needed since Android 8
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val channel = NotificationChannel(
+                        CHANNEL_ID,
+                        context.getString(R.string.app_name),
+                        NotificationManager.IMPORTANCE_DEFAULT
+                ).apply {
+                    description = context.getString(R.string.app_name)
+                }
+                notificationManager.createNotificationChannel(channel)
+            }
+
+            notificationManager.notify(notificationId, notificationBuilder.build())
+
+        }
+
+        fun setReminder(context: Context, uid: Int, timeInMillis: Long, message: String) {
+            val intent = Intent(context, ReminderReceiver::class.java)
+            intent.putExtra("uid", uid)
+            intent.putExtra("message", message)
+
+            // Create a pending intent to a future action with a unique request code i.e uid
+            val pendingIntent =
+                    PendingIntent.getBroadcast(context, uid, intent, PendingIntent.FLAG_ONE_SHOT)
+
+            // Create a service to monitor and execute the future action.
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.setExact(AlarmManager.RTC, timeInMillis, pendingIntent)
+        }
+
+        fun editReminder(context: Context, rid: Int) {
+            val intent = Intent(context, EditActivity::class.java)
+            intent.putExtra("rid", rid)
+            Log.d("hw_project", "Set rid to $rid")
+            context.startActivity(intent)
+        }
+
+        fun cancelReminder(context: Context, pendingIntentId: Int) {
+            val intent = Intent(context, ReminderReceiver::class.java)
+            val pendingIntent =
+                    PendingIntent.getBroadcast(
+                            context,
+                            pendingIntentId,
+                            intent,
+                            PendingIntent.FLAG_ONE_SHOT
+                    )
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.cancel(pendingIntent)
         }
     }
 }

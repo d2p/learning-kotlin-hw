@@ -6,9 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
-import com.ouluuni21.assistedreminder.db.ReminderInfo
 
-class ReminderHistoryAdaptor(context: Context, private val list:List<ReminderInfo>): BaseAdapter() {
+class ReminderHistoryAdaptor(context: Context, private val list:List<Reminder>): BaseAdapter() {
 
     private val inflater: LayoutInflater =
         context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -20,9 +19,9 @@ class ReminderHistoryAdaptor(context: Context, private val list:List<ReminderInf
         val txtReminderDate = row.findViewById(R.id.txtReminderDate) as TextView
         val txtReminderText = row.findViewById(R.id.txtReminderText) as TextView
 
-        txtReminderAuthor.text = list[position].author
-        txtReminderDate.text = list[position].date
-        txtReminderText.text = list[position].reminder
+        txtReminderAuthor.text = list[position].creator
+        txtReminderDate.text = list[position].reminder_time
+        txtReminderText.text = list[position].message
 
         return row
     }

@@ -83,13 +83,13 @@ class RegisterActivity : AppCompatActivity() {
                     getString(R.string.dbFileName)
                 )
                 .build()
-            var user = db.userDao().findByUsername(username)
-            Log.d("hw_project", "Find by ${username} User: ${user?.username}, pass: ${user?.password}")
+            val user = db.userDao().findByUsername(username)
+            Log.d("hw_project", "Find by $username User: ${user.username}, pass: ${user.password}")
 
-            if( user?.username == null) {
-                val user = UserInfo(null,username, password)
-                Log.d("hw_project", "Create new user: ${username}, pass: ${password}")
-                db.userDao().insert(user)
+            if( user.username == null) {
+                val new = UserInfo(null,username, password)
+                Log.d("hw_project", "Create new user: $username, pass: $password")
+                db.userDao().insert(new)
             }
             db.close()
         }

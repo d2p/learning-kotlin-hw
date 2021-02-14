@@ -4,16 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ReminderActivity">
+    tools:context=".EditActivity">
 
     <EditText
-        android:id="@+id/inpReminderDate"
+        android:id="@+id/inpEditReminderDate"
         android:layout_width="378dp"
         android:layout_height="48dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/textbox_shape"
         android:hint="@string/date"
         android:importantForAutofill="no"
+        android:inputType="date"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
         android:textColor="#3F51B5"
@@ -26,7 +27,7 @@
         app:layout_constraintVertical_bias="0.0" />
 
     <EditText
-        android:id="@+id/inpReminderDate2"
+        android:id="@+id/inpEditReminderMessage"
         android:layout_width="378dp"
         android:layout_height="120dp"
         android:layout_marginStart="16dp"
@@ -36,13 +37,13 @@
         android:background="@drawable/textbox_shape"
         android:fadeScrollbars="false"
         android:gravity="top"
-        android:hint="Input reminder text"
+        android:hint="@string/input_reminder_text"
         android:importantForAutofill="no"
-        android:inputType="textLongMessage|textMultiLine|textAutoComplete"
+        android:inputType="textLongMessage|textMultiLine|text|textAutoComplete"
         android:isScrollContainer="false"
         android:overScrollMode="always"
-        android:paddingTop="8dp"
         android:paddingStart="16dp"
+        android:paddingTop="8dp"
         android:paddingEnd="16dp"
         android:scrollbarSize="16dp"
         android:scrollbarStyle="insideOverlay"
@@ -73,7 +74,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.051"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/reminderAuthor"
+        app:layout_constraintTop_toBottomOf="@+id/editReminderAuthor"
         app:layout_constraintVertical_bias="0.0" />
 
     <TextView
@@ -88,7 +89,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.051"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/inpReminderDate"
+        app:layout_constraintTop_toBottomOf="@+id/inpEditReminderDate"
         app:layout_constraintVertical_bias="0.0" />
 
     <TextView
@@ -103,18 +104,18 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.051"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/txtNeeReminderHeader"
+        app:layout_constraintTop_toBottomOf="@+id/txtNewReminderHeader"
         app:layout_constraintVertical_bias="0.0" />
 
     <TextView
-        android:id="@+id/txtNeeReminderHeader"
+        android:id="@+id/txtNewReminderHeader"
         android:layout_width="412dp"
         android:layout_height="66dp"
         android:background="#0656CF"
         android:paddingLeft="10dp"
         android:paddingTop="20dp"
         android:paddingRight="10dp"
-        android:text="@string/new_reminder"
+        android:text="@string/edit_reminder"
         android:textAlignment="viewStart"
         android:textColor="#FFFFFF"
         android:textSize="24sp"
@@ -127,7 +128,7 @@
         app:layout_constraintVertical_bias="0.0" />
 
     <TextView
-        android:id="@+id/reminderAuthor"
+        android:id="@+id/editReminderAuthor"
         android:layout_width="263dp"
         android:layout_height="48dp"
         android:layout_marginStart="16dp"
@@ -145,15 +146,15 @@
         app:layout_constraintVertical_bias="0.0" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/btnUpdate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/create"
+        android:text="@string/update"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/inpReminderDate2"
+        app:layout_constraintTop_toBottomOf="@+id/inpEditReminderMessage"
         app:layout_constraintVertical_bias="0.376" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

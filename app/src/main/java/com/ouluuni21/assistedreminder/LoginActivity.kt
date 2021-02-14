@@ -27,6 +27,9 @@ class LoginActivity : AppCompatActivity() {
             if( checkLoginStatus() == 1) {
                 this.startActivity(Intent(applicationContext, MainActivity::class.java))
             }
+            else {
+                this.startActivity(Intent(applicationContext, LoginActivity::class.java))
+            }
 //            else {
 //                Toast.makeText(
 //                    applicationContext,
@@ -79,15 +82,18 @@ class LoginActivity : AppCompatActivity() {
                         AppDatabase::class.java,
                         getString(R.string.dbFileName)
                     )
+                    //.fallbackToDestructiveMigration()
                     .build()
-                var user = db.userDao().findByUsername(username)
+                val user = db.userDao().findByUsername(username)
                 db.close()
 
-                Log.d("hw_project", "Find by ${username} User: ${user?.username}, pass: ${user?.password}")
-                if( user?.username == username && user?.password == password) {
+                Log.d("hw_project", "Find by ${username} User: ${user.username}, pass: ${user.password}")
+                if( user.username == username && user.password == password) {
                     sharedPref.edit().putInt("LoginStatus", 1).apply()
                     sharedPref.edit().putString("Username", username).apply()
+                    sharedPref.edit().putInt("Uid", user.uid).apply()
                     this.startActivity(Intent(applicationContext, MainActivity::class.java))
+                    loginStatus = 1
                 }
             }
         }
