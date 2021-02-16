@@ -17,6 +17,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.room.Room
 import com.ouluuni21.assistedreminder.db.AppDatabase
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
@@ -34,7 +36,7 @@ class MainActivity : AppCompatActivity() {
             // Retrieve selected Item
             val selectedReminder = listView.adapter.getItem(position) as Reminder
             val message =
-                "Do you want to delete ${selectedReminder.uid} reminder on ${selectedReminder.reminder_time} from ${selectedReminder.creator} ?"
+                "Do you want to delete reminder on ${selectedReminder.reminder_time} from ${selectedReminder.creator} ?"
 
             // Show AlertDialog to delete the reminder
             val builder = AlertDialog.Builder(this@MainActivity)
@@ -149,10 +151,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        private fun currentTime(): Date {
+            return Calendar.getInstance().time
+        }
+
+        private fun convertLongToDate(time: Date): String {
+            val format = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            return format.format(time)
+        }
+
         private fun dummyList(): List<Reminder> {
             val reminderInfos = mutableListOf<Reminder>()
             for (i in 0 until 10) {
-                reminderInfos += Reminder(i, "Author " + i, "01/01/2021", "Dummy reminder text entry")
+                reminderInfos += Reminder(i, "Author " + i, currentTime(), "Dummy reminder text entry")
             }
             return reminderInfos
         }

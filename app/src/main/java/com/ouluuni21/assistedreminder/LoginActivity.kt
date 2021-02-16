@@ -82,13 +82,13 @@ class LoginActivity : AppCompatActivity() {
                         AppDatabase::class.java,
                         getString(R.string.dbFileName)
                     )
-                    //.fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration()
                     .build()
                 val user = db.userDao().findByUsername(username)
                 db.close()
 
-                Log.d("hw_project", "Find by ${username} User: ${user.username}, pass: ${user.password}")
-                if( user.username == username && user.password == password) {
+                Log.d("hw_project", "Find by ${username} User: ${user?.username}, pass: ${user?.password}")
+                if( user?.username == username && user?.password == password) {
                     sharedPref.edit().putInt("LoginStatus", 1).apply()
                     sharedPref.edit().putString("Username", username).apply()
                     sharedPref.edit().putInt("Uid", user.uid).apply()

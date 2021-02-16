@@ -8,8 +8,8 @@
 
     <EditText
         android:id="@+id/inpReminderDate"
-        android:layout_width="378dp"
-        android:layout_height="48dp"
+        android:layout_width="160dp"
+        android:layout_height="42dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/textbox_shape"
         android:hint="@string/date"
@@ -21,7 +21,7 @@
         android:textColorHint="#00BCD4"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.515"
+        app:layout_constraintHorizontal_bias="0.073"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView4"
         app:layout_constraintVertical_bias="0.0" />
@@ -67,7 +67,7 @@
         android:layout_width="100dp"
         android:layout_height="24dp"
         android:layout_marginTop="32dp"
-        android:text="@string/date"
+        android:text="@string/date_and_time"
         android:textSize="14sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -129,8 +129,8 @@
 
     <TextView
         android:id="@+id/reminderAuthor"
-        android:layout_width="263dp"
-        android:layout_height="48dp"
+        android:layout_width="254dp"
+        android:layout_height="42dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:hint="@string/author"
@@ -156,5 +156,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/inpReminderMessage"
         app:layout_constraintVertical_bias="0.376" />
+
+    <EditText
+        android:id="@+id/inpReminderTime"
+        android:layout_width="160dp"
+        android:layout_height="42dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/textbox_shape"
+        android:text="00:00"
+        android:importantForAutofill="no"
+        android:inputType="time"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textColor="#3F51B5"
+        android:textColorHint="#00BCD4"
+        app:layout_constraintBottom_toTopOf="@+id/textView5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.767"
+        app:layout_constraintStart_toEndOf="@+id/inpReminderDate"
+        app:layout_constraintTop_toBottomOf="@+id/textView4"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

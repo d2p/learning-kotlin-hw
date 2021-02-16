@@ -84,9 +84,9 @@ class RegisterActivity : AppCompatActivity() {
                 )
                 .build()
             val user = db.userDao().findByUsername(username)
-            Log.d("hw_project", "Find by $username User: ${user.username}, pass: ${user.password}")
+            Log.d("hw_project", "Find by $username User: ${user?.username}, pass: ${user?.password}")
 
-            if( user.username == null) {
+            if (user == null) {
                 val new = UserInfo(null,username, password)
                 Log.d("hw_project", "Create new user: $username, pass: $password")
                 db.userDao().insert(new)

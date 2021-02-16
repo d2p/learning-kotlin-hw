@@ -1,5 +1,7 @@
 package com.ouluuni21.assistedreminder
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.AsyncTask
 import android.os.Bundle
 import android.util.Log
@@ -11,6 +13,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
 import com.ouluuni21.assistedreminder.db.AppDatabase
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class EditActivity : AppCompatActivity() {
@@ -23,11 +29,41 @@ class EditActivity : AppCompatActivity() {
 
         refreshView(rid)
 
+        val dateView = findViewById<EditText>(R.id.inpEditReminderDate)
+        dateView.showSoftInputOnFocus = false
+        dateView.setOnClickListener {
+            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+            val date = LocalDate.parse(dateView.text.toString(), formatter)
+            val dpd = DatePickerDialog(this, DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
+                // Display selected date in TextView
+                val dateUpd = LocalDate.of(year, monthOfYear+1, dayOfMonth)
+                val formattedDate = dateUpd.format(formatter)
+                dateView.setText(formattedDate)
+            }, date.year, date.monthValue-1, date.dayOfMonth)
+            dpd.show()
+        }
+
+        val timeView = findViewById<EditText>(R.id.inpEditReminderTime)
+        timeView.showSoftInputOnFocus = false
+        timeView.setOnClickListener {
+            val formatter = DateTimeFormatter.ofPattern("HH:mm")
+            var timeInp = timeView.text.toString()
+            if (timeInp.isEmpty()) timeInp = "00:00"
+            val time = LocalTime.parse(timeInp, formatter)
+            val dpd = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { _, hour, minute ->
+                // Display selected date in TextView
+                val timeUpd = LocalTime.of(hour, minute)
+                val formattedDate = timeUpd.format(formatter)
+                timeView.setText(formattedDate)
+            }, time.hour, time.minute, true)
+            dpd.show()
+        }
+
         findViewById<Button>(R.id.btnUpdate).setOnClickListener {
             Log.d("hw_project", "Update reminder button clicked")
 
             // Validate entry values here
-            val date = findViewById<EditText>(R.id.inpEditReminderDate).text.toString()
+            val date = dateView.text.toString()
             if (date.isEmpty()) {
                 Toast.makeText(
                     applicationContext,
@@ -37,12 +73,25 @@ class EditActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val time = timeView.text.toString()
+            if (time.isEmpty()) {
+                Toast.makeText(
+                    applicationContext,
+                    "Time should not be empty and should be in HH:mm format!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            val format = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+            val datetime: Date = format.parse(date + " " + time)!!
+
             val creator = findViewById<TextView>(R.id.editReminderAuthor).text.toString()
             val message = findViewById<EditText>(R.id.inpEditReminderMessage).text.toString()
             val reminder = Reminder(
                 uid = rid,
                 creator = creator,
-                reminder_time = date,
+                reminder_time = datetime,
                 message = message
             )
 
@@ -100,6 +149,17 @@ class EditActivity : AppCompatActivity() {
         refreshTask.execute(rid.toString())
     }
 
+    private fun convertLongToDate(time: Date): String {
+        val format = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        return format.format(time)
+    }
+
+    private fun convertLongToTime(time: Date): String {
+        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
+        return format.format(time)
+    }
+
+
     inner class LoadReminderInfoEntry : AsyncTask<String?, String?, Reminder>() {
         override fun doInBackground(vararg params: String?): Reminder {
             val rid = params[0]
@@ -121,9 +181,11 @@ class EditActivity : AppCompatActivity() {
             if (reminder != null) {
                 val editAuthor = findViewById<TextView>(R.id.editReminderAuthor) as TextView
                 val editDate = findViewById<EditText>(R.id.inpEditReminderDate) as EditText
+                val editTime = findViewById<EditText>(R.id.inpEditReminderTime) as EditText
                 val editText = findViewById<EditText>(R.id.inpEditReminderMessage) as EditText
                 editAuthor.text = reminder.creator
-                editDate.setText(reminder.reminder_time)
+                editDate.setText(convertLongToDate(reminder.reminder_time))
+                editTime.setText(convertLongToTime(reminder.reminder_time))
                 editText.setText(reminder.message)
             } else {
                 val toast =

@@ -1,5 +1,7 @@
 package com.ouluuni21.assistedreminder
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.content.Context
 import android.os.AsyncTask
 import android.os.Bundle
@@ -12,6 +14,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.room.Room
 import com.ouluuni21.assistedreminder.db.AppDatabase
 import com.ouluuni21.assistedreminder.db.ReminderInfo
+import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class ReminderActivity : AppCompatActivity() {
@@ -21,11 +27,43 @@ class ReminderActivity : AppCompatActivity() {
 
         val uid = refreshView()
 
+        val c = Calendar.getInstance()
+        val year = c.get(Calendar.YEAR)
+        val month = c.get(Calendar.MONTH)
+        val day = c.get(Calendar.DAY_OF_MONTH)
+        val dateView = findViewById<EditText>(R.id.inpReminderDate)
+        dateView.showSoftInputOnFocus = false
+        dateView.setOnClickListener {
+            val dpd = DatePickerDialog(this, DatePickerDialog.OnDateSetListener { _, year, monthOfYear, dayOfMonth ->
+                // Display selected date in TextView
+                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")
+                val date = LocalDate.of(year, monthOfYear+1, dayOfMonth)
+                val formattedDate = date.format(formatter)
+                dateView.setText(formattedDate)
+            }, year, month, day)
+            dpd.show()
+        }
+
+        val hour = c.get(Calendar.HOUR_OF_DAY)
+        val minute = c.get(Calendar.MINUTE)
+        val timeView = findViewById<EditText>(R.id.inpReminderTime)
+        timeView.showSoftInputOnFocus = false
+        timeView.setOnClickListener {
+            val dpd = TimePickerDialog(this, TimePickerDialog.OnTimeSetListener { _, hour, minute ->
+                // Display selected date in TextView
+                val formatter = DateTimeFormatter.ofPattern("HH:mm")
+                val time = LocalTime.of(hour, minute)
+                val formattedDate = time.format(formatter)
+                timeView.setText(formattedDate)
+            }, hour, minute, true)
+            dpd.show()
+        }
+
         findViewById<Button>(R.id.btnCreate).setOnClickListener {
             Log.d("hw_project", "Create reminder button clicked")
 
             // Validate entry values here
-            val date = findViewById<EditText>(R.id.inpReminderDate).text.toString()
+            val date = dateView.text.toString()
             if (date.isEmpty()) {
                 Toast.makeText(
                         applicationContext,
@@ -34,17 +72,30 @@ class ReminderActivity : AppCompatActivity() {
                 ).show()
                 return@setOnClickListener
             }
+            val time = timeView.text.toString()
+            if (time.isEmpty()) {
+                Toast.makeText(
+                    applicationContext,
+                    "Time should not be empty and should be in HH:mm format!",
+                    Toast.LENGTH_SHORT
+                ).show()
+                return@setOnClickListener
+            }
+
+            val current = Calendar.getInstance().time
+            val format = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+            val datetime: Date = format.parse(date + " " + time)!!
 
             val message = findViewById<EditText>(R.id.inpReminderMessage).text.toString()
             val reminder = ReminderInfo(
-                    null,
-                    creator_id = uid,
-                    creation_time = "",
-                    reminder_time = date,
-                    message = message,
-                    location_x = "",
-                    location_y = "",
-                    reminder_seen = false
+                null,
+                creator_id = uid,
+                creation_time = current,
+                reminder_time = datetime,
+                message = message,
+                location_x = "",
+                location_y = "",
+                reminder_seen = false
             )
 
             // Convert date  string value to Date format using dd.mm.yyyy
@@ -71,19 +122,19 @@ class ReminderActivity : AppCompatActivity() {
                     val msg =
                             "Reminder for ${date} has been created."
                     MainActivity.setReminder(
-                        applicationContext,
-                        ruid,
-                        reminderCalender.timeInMillis,
-                        msg
+                            applicationContext,
+                            ruid,
+                            reminderCalender.timeInMillis,
+                            msg
                     )
                 }
             }
 
             if(reminderCalender.timeInMillis > Calendar.getInstance().timeInMillis){
                 Toast.makeText(
-                    applicationContext,
-                    "Reminder for future reminder saved.",
-                    Toast.LENGTH_SHORT
+                        applicationContext,
+                        "Reminder for future reminder saved.",
+                        Toast.LENGTH_SHORT
                 ).show()
             }
             finish()
@@ -97,7 +148,7 @@ class ReminderActivity : AppCompatActivity() {
 
     private fun refreshView(): Int {
         val sharedPref = applicationContext.getSharedPreferences(
-            getString(R.string.preference_file), Context.MODE_PRIVATE
+                getString(R.string.preference_file), Context.MODE_PRIVATE
         )
         val username = findViewById<TextView>(R.id.reminderAuthor)
         val uid = sharedPref.getInt("Uid", 0)

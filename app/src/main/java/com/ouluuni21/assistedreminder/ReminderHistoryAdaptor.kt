@@ -6,12 +6,18 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.TextView
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ReminderHistoryAdaptor(context: Context, private val list:List<Reminder>): BaseAdapter() {
 
     private val inflater: LayoutInflater =
         context.getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
 
+    private fun Date.convertLongToDate(): String {
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+        return dateFormat.format(this)
+    }
     override fun getView(position: Int, convertView: View?, container: ViewGroup?): View? {
         val row = inflater.inflate(R.layout.reminder_history_item, container, false)
 
@@ -20,7 +26,7 @@ class ReminderHistoryAdaptor(context: Context, private val list:List<Reminder>):
         val txtReminderText = row.findViewById(R.id.txtReminderText) as TextView
 
         txtReminderAuthor.text = list[position].creator
-        txtReminderDate.text = list[position].reminder_time
+        txtReminderDate.text = list[position].reminder_time.convertLongToDate()
         txtReminderText.text = list[position].message
 
         return row

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
 import com.ouluuni21.assistedreminder.Reminder
+import java.util.*
 
 @Dao
 interface ReminderDao {
@@ -22,5 +23,5 @@ interface ReminderDao {
     fun getReminderEntry(id: Int): Reminder
 
     @Query("UPDATE reminderInfo SET reminder_time = :date, message = :message WHERE uid = :id")
-    fun updateReminderEntry(id: Int, date: String, message: String)
+    fun updateReminderEntry(id: Int, date: Date, message: String)
 }

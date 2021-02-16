@@ -8,8 +8,8 @@
 
     <EditText
         android:id="@+id/inpEditReminderDate"
-        android:layout_width="378dp"
-        android:layout_height="48dp"
+        android:layout_width="160dp"
+        android:layout_height="42dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/textbox_shape"
         android:hint="@string/date"
@@ -21,8 +21,28 @@
         android:textColorHint="#00BCD4"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.515"
+        app:layout_constraintHorizontal_bias="0.063"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView4"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <EditText
+        android:id="@+id/inpEditReminderTime"
+        android:layout_width="160dp"
+        android:layout_height="42dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/textbox_shape"
+        android:hint="@string/time"
+        android:importantForAutofill="no"
+        android:inputType="time"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textColor="#3F51B5"
+        android:textColorHint="#00BCD4"
+        app:layout_constraintBottom_toTopOf="@+id/textView5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.767"
+        app:layout_constraintStart_toEndOf="@+id/inpEditReminderDate"
         app:layout_constraintTop_toBottomOf="@+id/textView4"
         app:layout_constraintVertical_bias="0.0" />
 
@@ -129,8 +149,8 @@
 
     <TextView
         android:id="@+id/editReminderAuthor"
-        android:layout_width="263dp"
-        android:layout_height="48dp"
+        android:layout_width="254dp"
+        android:layout_height="42dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:hint="@string/author"

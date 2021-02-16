@@ -24,4 +24,8 @@
     <string name="update">Update</string>
     <string name="edit_reminder">Edit Reminder</string>
     <string name="input_reminder_text">Input reminder message</string>
+    <string name="thumbnail">Thumbnail</string>
+    <string name="detail">Actions</string>
+    <string name="date_and_time">Date and time</string>
+    <string name="time">Time</string>
 </resources>

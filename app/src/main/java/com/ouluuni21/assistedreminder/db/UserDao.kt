@@ -15,6 +15,6 @@ interface UserDao {
     @Query("DELETE FROM userInfo WHERE uid = :id")
     fun delete(id: Int)
 
-    @Query("SELECT * FROM userInfo WHERE username LIKE :username")
+    @Query("SELECT * FROM userInfo WHERE username = :username")
     fun findByUsername(username: String): User
 }
