@@ -18,6 +18,7 @@ class ReminderHistoryAdaptor(context: Context, private val list:List<Reminder>):
         val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
         return dateFormat.format(this)
     }
+
     override fun getView(position: Int, convertView: View?, container: ViewGroup?): View? {
         val row = inflater.inflate(R.layout.reminder_history_item, container, false)
 

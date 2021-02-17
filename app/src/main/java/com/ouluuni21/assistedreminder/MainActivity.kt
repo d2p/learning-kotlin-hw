@@ -1,18 +1,20 @@
 package com.ouluuni21.assistedreminder
 
-import android.app.AlarmManager
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
+import android.text.Html
+import android.text.Html.FROM_HTML_MODE_LEGACY
+import android.text.Spanned
 import android.util.Log
 import android.view.Gravity
+import android.view.MenuItem
+import android.view.View
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
+import androidx.annotation.MenuRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.room.Room
@@ -30,11 +32,18 @@ class MainActivity : AppCompatActivity() {
 
         showUser()
         refreshListView()
-
+/*
+        findViewById<TextView>(R.id.currentUser).setOnClickListener { v: View ->
+            showMenu(v, R.menu.popup_menu)
+        }
+*/
         listView = findViewById<ListView>(R.id.reminderListView)
-        listView.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+        listView.onItemClickListener = AdapterView.OnItemClickListener { v: View, _, position, _ ->
             // Retrieve selected Item
             val selectedReminder = listView.adapter.getItem(position) as Reminder
+
+            showMenu(v, R.menu.popup_menu, selectedReminder)
+/*
             val message =
                 "Do you want to delete reminder on ${selectedReminder.reminder_time} from ${selectedReminder.creator} ?"
 
@@ -49,9 +58,9 @@ class MainActivity : AppCompatActivity() {
                     AsyncTask.execute {
                         val db = Room
                             .databaseBuilder(
-                                applicationContext,
-                                AppDatabase::class.java,
-                                getString(R.string.dbFileName)
+                                    applicationContext,
+                                    AppDatabase::class.java,
+                                    getString(R.string.dbFileName)
                             )
                             .build()
                         db.reminderDao().delete(selectedReminder.uid)
@@ -72,6 +81,7 @@ class MainActivity : AppCompatActivity() {
                     dialog.dismiss()
                 }
                 .show()
+*/
         }
 
         findViewById<Button>(R.id.logout).setOnClickListener {
@@ -91,7 +101,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun showUser() {
         val sharedPref = applicationContext.getSharedPreferences(
-            getString(R.string.preference_file), MODE_PRIVATE
+                getString(R.string.preference_file), MODE_PRIVATE
         )
         val currentUser = sharedPref.getString("Username", "")
         val user = findViewById<TextView>(R.id.currentUser)
@@ -111,19 +121,103 @@ class MainActivity : AppCompatActivity() {
 
     private fun logout(): Int {
         val sharedPref = applicationContext.getSharedPreferences(
-            getString(R.string.preference_file), MODE_PRIVATE
+                getString(R.string.preference_file), MODE_PRIVATE
         )
         sharedPref.edit().putInt("LoginStatus", 0).apply()
         return 1
+    }
+
+    private fun showMenu(v: View, @MenuRes menuRes: Int, reminder: Reminder) {
+        val popup = PopupMenu(applicationContext!!, v)
+        popup.menuInflater.inflate(menuRes, popup.menu)
+        Log.d("hw_project", "Popup menu for id " + reminder.uid)
+
+        popup.setOnMenuItemClickListener { menuItem: MenuItem ->
+            when (menuItem.itemId) {
+                R.id.menuEditReminder -> {
+                    editReminder(this, reminder.uid)
+                }
+                R.id.menuCreateCalendar -> {
+                    addCalendarEvent(reminder)
+                }
+                R.id.menuDeleteReminder -> {
+                    deleteDialog(reminder)
+                }
+                else -> {
+                }
+            }
+            true
+        }
+        popup.setOnDismissListener {
+            // Respond to popup being dismissed.
+        }
+        popup.show()
+    }
+
+    private fun Date.convertLongToDate(): String {
+        val dateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+        return dateFormat.format(this)
+    }
+
+    private fun deleteDialog(reminder: Reminder) {
+        val message =
+            getString(R.string.delete_alert, reminder.reminder_time.convertLongToDate(), reminder.creator)
+        val styledText: Spanned = Html.fromHtml(message, FROM_HTML_MODE_LEGACY)
+
+        // Show AlertDialog to delete the reminder
+        val builder = AlertDialog.Builder(this@MainActivity)
+        builder.setTitle("Delete reminder?")
+            .setMessage(styledText)
+            .setPositiveButton("Delete") { _, _ ->
+                // Update UI
+
+                // Delete from database
+                AsyncTask.execute {
+                    val db = Room
+                            .databaseBuilder(
+                                    applicationContext,
+                                    AppDatabase::class.java,
+                                    getString(R.string.dbFileName)
+                            )
+                            .build()
+                    db.reminderDao().delete(reminder.uid)
+                    db.close()
+                }
+                // Cancel pending time based reminder
+                cancelReminder(applicationContext, reminder.uid)
+
+                // Refresh payments list
+                refreshListView()
+            }
+            .setNegativeButton("Cancel") { dialog, _ ->
+                // Do nothing
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun addCalendarEvent(r: Reminder) {
+        val calendarEvent: Calendar = Calendar.getInstance()
+        calendarEvent.time = r.reminder_time
+        val intent = Intent(Intent.ACTION_EDIT)
+        intent.type = "vnd.android.cursor.item/event"
+        intent.putExtra("beginTime", calendarEvent.timeInMillis)
+        intent.putExtra("allDay", false)
+        intent.putExtra("rule", "FREQ=YEARLY")
+        intent.putExtra("endTime", calendarEvent.timeInMillis + 60 * 60 * 1000)
+        intent.putExtra("title", "Reminder from " + r.creator)
+        intent.putExtra("location", "N/A")
+        intent.putExtra("description", r.message)
+        startActivity(intent)
     }
 
     inner class LoadReminderInfoEntries : AsyncTask<String?, String?, List<Reminder>>() {
         override fun doInBackground(vararg params: String?): List<Reminder> {
             val db = Room
                 .databaseBuilder(
-                    applicationContext,
-                    AppDatabase::class.java,
-                    getString(R.string.dbFileName)
+                        applicationContext,
+                        AppDatabase::class.java,
+                        getString(R.string.dbFileName)
                 )
                 //.fallbackToDestructiveMigration()
                 .build()
