@@ -28,7 +28,7 @@
 
     <EditText
         android:id="@+id/inpReminderMessage"
-        android:layout_width="378dp"
+        android:layout_width="320dp"
         android:layout_height="120dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
@@ -42,8 +42,8 @@
         android:inputType="textLongMessage|textMultiLine|textAutoComplete"
         android:isScrollContainer="false"
         android:overScrollMode="always"
-        android:paddingTop="8dp"
         android:paddingStart="16dp"
+        android:paddingTop="8dp"
         android:paddingEnd="16dp"
         android:scrollbarSize="16dp"
         android:scrollbarStyle="insideOverlay"
@@ -163,11 +163,11 @@
         android:layout_height="42dp"
         android:layout_marginTop="16dp"
         android:background="@drawable/textbox_shape"
-        android:text="00:00"
         android:importantForAutofill="no"
         android:inputType="time"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
+        android:hint="@string/time"
         android:textColor="#3F51B5"
         android:textColorHint="#00BCD4"
         app:layout_constraintBottom_toTopOf="@+id/textView5"
@@ -176,5 +176,47 @@
         app:layout_constraintStart_toEndOf="@+id/inpReminderDate"
         app:layout_constraintTop_toBottomOf="@+id/textView4"
         app:layout_constraintVertical_bias="0.0" />
+
+    <ImageView
+        android:id="@+id/thumbnail"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="16dp"
+        android:contentDescription="@string/thumbnail"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.953"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/txtNeeReminderHeader"
+        app:layout_constraintVertical_bias="0.0"
+        app:srcCompat="@drawable/ic_label_important" />
+
+    <TextView
+        android:id="@+id/addThumbnail"
+        android:layout_width="90dp"
+        android:layout_height="16dp"
+        android:gravity="center"
+        android:text="@string/update_image"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.953"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/thumbnail" />
+
+    <ImageView
+        android:id="@+id/btnSpeech"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:backgroundTint="#F9F8FA"
+        android:contentDescription="@string/speech_to_text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.407"
+        app:layout_constraintStart_toEndOf="@+id/inpReminderMessage"
+        app:layout_constraintTop_toBottomOf="@+id/inpReminderDate"
+        app:layout_constraintVertical_bias="0.177"
+        app:srcCompat="@drawable/ic_mic_off" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

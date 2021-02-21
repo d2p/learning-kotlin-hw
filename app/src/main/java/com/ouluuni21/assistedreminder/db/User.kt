@@ -1,4 +1,4 @@
-package com.ouluuni21.assistedreminder
+package com.ouluuni21.assistedreminder.db
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

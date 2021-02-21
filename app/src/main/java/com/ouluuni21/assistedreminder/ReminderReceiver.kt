@@ -10,6 +10,6 @@ class ReminderReceiver : BroadcastReceiver(){
         // val uid = intent?.getIntExtra("uid", 0)
         val text = intent?.getStringExtra("message")
 
-        MainActivity.showNofitication(context!!,text!!)
+        MainActivity.showNotification(context!!,text!!)
     }
 }

@@ -29,44 +29,46 @@ class RegisterActivity : AppCompatActivity() {
             val password = findViewById<EditText>(R.id.inpRegisterPassword).text.toString()
             val password2= findViewById<EditText>(R.id.inpRegisterPassword2).text.toString()
 
-            if (username.isEmpty()) {
-                Toast.makeText(
-                    applicationContext,
-                    "Empty username field!",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            else if (username.length < 3) {
-                Toast.makeText(
-                    applicationContext,
-                    "Username is too short. Must be at least 3 symbols long!",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            else if (password.isEmpty()) {
-                Toast.makeText(
-                    applicationContext,
-                    "Empty password field!",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            else if (password.length < 6) {
-                Toast.makeText(
-                    applicationContext,
-                    "Password is too short. Must be at least 6 symbols long!",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            else if( password != password2) {
-                Toast.makeText(
-                    applicationContext,
-                    "Passwords do not match!",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-            else {
-                register()
-                this.startActivity(Intent(applicationContext, LoginActivity::class.java))
+            when {
+                username.isEmpty() -> {
+                    Toast.makeText(
+                            applicationContext,
+                            "Empty username field!",
+                            Toast.LENGTH_SHORT
+                    ).show()
+                }
+                username.length < 3 -> {
+                    Toast.makeText(
+                            applicationContext,
+                            "Username is too short. Must be at least 3 symbols long!",
+                            Toast.LENGTH_SHORT
+                    ).show()
+                }
+                password.isEmpty() -> {
+                    Toast.makeText(
+                            applicationContext,
+                            "Empty password field!",
+                            Toast.LENGTH_SHORT
+                    ).show()
+                }
+                password.length < 6 -> {
+                    Toast.makeText(
+                            applicationContext,
+                            "Password is too short. Must be at least 6 symbols long!",
+                            Toast.LENGTH_SHORT
+                    ).show()
+                }
+                password != password2 -> {
+                    Toast.makeText(
+                            applicationContext,
+                            "Passwords do not match!",
+                            Toast.LENGTH_SHORT
+                    ).show()
+                }
+                else -> {
+                    register()
+                    this.startActivity(Intent(applicationContext, LoginActivity::class.java))
+                }
             }
         }
     }

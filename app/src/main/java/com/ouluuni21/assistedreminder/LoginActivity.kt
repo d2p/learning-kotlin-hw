@@ -52,29 +52,11 @@ class LoginActivity : AppCompatActivity() {
             getString(R.string.preference_file), Context.MODE_PRIVATE
         )
         var loginStatus = sharedPref.getInt("LoginStatus", 0)
-/*
-        AsyncTask.execute {
-            val user = UserInfo(null,"123456", "qwerty")
-            val db = Room
-                .databaseBuilder(
-                    applicationContext,
-                    AppDatabase::class.java,
-                    getString(R.string.dbFileName)
-                )
-                .build()
-            db.userDao().insert(user)
-            db.close()
-        }
 
-        sharedPref.edit().putString("Username", "tester").apply()
-        sharedPref.edit().putString("Password", "qwerty").apply()
-*/
         if (loginStatus != 1) {
             AsyncTask.execute {
                 val username = findViewById<EditText>(R.id.username).text.toString()
                 val password = findViewById<EditText>(R.id.password).text.toString()
-//                val defUsername = sharedPref.getString("Username", "")
-//                val defPassword = sharedPref.getString("Password", "")
 
                 val db = Room
                     .databaseBuilder(

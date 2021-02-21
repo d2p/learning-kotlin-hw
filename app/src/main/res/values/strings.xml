@@ -32,4 +32,6 @@
     <string name="time">Time</string>
     <string name="create_calendar">Create calendar entry</string>
     <string name="delete_alert">Do you want to delete reminder for %1$s created by &lt;b>%2$s&lt;/b>?</string>
+    <string name="update_image"><u>Update image</u></string>
+    <string name="speech_to_text">Speech to text</string>
 </resources>
