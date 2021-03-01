@@ -15,5 +15,6 @@ data class ReminderInfo(
         @ColumnInfo(name = "location_x") var location_x: String,
         @ColumnInfo(name = "location_y") var location_y: String,
         @ColumnInfo(name = "reminder_seen") var reminder_seen: Boolean,
+        @ColumnInfo(name = "show_notif") var show_notif: Boolean,
         @ColumnInfo(typeAffinity = ColumnInfo.BLOB) var image: ByteArray?
 )

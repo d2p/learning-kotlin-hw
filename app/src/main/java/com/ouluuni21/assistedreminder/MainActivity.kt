@@ -3,6 +3,7 @@ package com.ouluuni21.assistedreminder
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.AsyncTask
 import android.os.Build
 import android.os.Bundle
@@ -18,10 +19,14 @@ import androidx.annotation.MenuRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.room.Room
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.ouluuni21.assistedreminder.db.AppDatabase
 import com.ouluuni21.assistedreminder.db.Reminder
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
@@ -31,7 +36,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        showUser()
+        val showAll: Boolean = intent!!.getBooleanExtra("showall", false)
+
+        updateView()
         refreshListView()
 
         listView = findViewById(R.id.reminderListView)
@@ -39,22 +46,24 @@ class MainActivity : AppCompatActivity() {
             // Retrieve selected Item
             val selectedReminder = listView.adapter.getItem(position) as Reminder
             showMenu(v, R.menu.popup_menu, selectedReminder)
-            //showWindow(listView.adapter.getView(position, v, parent), selectedReminder)
         }
 
-        findViewById<Button>(R.id.logout).setOnClickListener {
-            Log.d("hw_project", "Logout button clicked")
-            if( logout() == 1) {
-                this.startActivity(Intent(applicationContext, LoginActivity::class.java))
-            }
+        findViewById<Button>(R.id.btnShowAll).setOnClickListener {
+            val intent = Intent(applicationContext, MainActivity::class.java)
+            intent.putExtra("showall", !showAll)
+            this.startActivity(intent)
         }
 
         findViewById<Button>(R.id.new_reminder).setOnClickListener {
             this.startActivity(Intent(applicationContext, ReminderActivity::class.java))
         }
+
+        findViewById<TextView>(R.id.currentUser).setOnClickListener {
+            this.startActivity(Intent(applicationContext, ProfileActivity::class.java))
+        }
     }
 
-    private fun showUser() {
+    private fun updateView() {
         val sharedPref = applicationContext.getSharedPreferences(
             getString(R.string.preference_file), MODE_PRIVATE
         )
@@ -65,59 +74,21 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        showUser()
+        updateView()
         refreshListView()
     }
 
     private fun refreshListView() {
         val refreshTask = LoadReminderInfoEntries()
-        refreshTask.execute()
-    }
-
-    private fun logout(): Int {
-        val sharedPref = applicationContext.getSharedPreferences(
-            getString(R.string.preference_file), MODE_PRIVATE
-        )
-        sharedPref.edit().putInt("LoginStatus", 0).apply()
-        return 1
-    }
-
-    private fun showWindow(v: View, reminder: Reminder) {
-        val popup = ListPopupWindow(this, null, R.attr.listPopupWindowStyle)
-
-        // Set button as the list popup's anchor
-        popup.anchorView = v
-
-        // Set list popup's contentresources.getString(
-        val items = listOf(
-            resources.getString(R.string.edit),
-            resources.getString(R.string.create_calendar),
-            resources.getString(R.string.delete)
-        )
-        val adapter = ArrayAdapter(this, R.layout.popup_window, items)
-        popup.setAdapter(adapter)
-
-        // Set list popup's item click listener
-        popup.setOnItemClickListener { _, _, position: Int, _ ->
-            when (position) {
-                0 -> {
-                    editReminder(this, reminder.uid)
-                }
-                1 -> {
-                    addCalendarEvent(reminder)
-                }
-                2 -> {
-                    deleteDialog(reminder)
-                }
-                else -> {
-                }
-            }
-
-            // Dismiss popup.
-            popup.dismiss()
+        val showAll: Boolean = intent!!.getBooleanExtra("showall", false)
+        val button = findViewById<Button>(R.id.btnShowAll)
+        if (showAll) {
+            button.setText("Show old")
         }
-
-        popup.show()
+        else {
+            button.setText(" Show all")
+        }
+        refreshTask.execute()
     }
 
     private fun showMenu(v: View, @MenuRes menuRes: Int, reminder: Reminder) {
@@ -173,8 +144,6 @@ class MainActivity : AppCompatActivity() {
         builder.setTitle("Delete reminder?")
             .setMessage(styledText)
             .setPositiveButton("Delete") { _, _ ->
-                // Update UI
-
                 // Delete from database
                 AsyncTask.execute {
                     val db = Room
@@ -207,7 +176,6 @@ class MainActivity : AppCompatActivity() {
         intent.type = "vnd.android.cursor.item/event"
         intent.putExtra("beginTime", calendarEvent.timeInMillis)
         intent.putExtra("allDay", false)
-        intent.putExtra("rule", "FREQ=YEARLY")
         intent.putExtra("endTime", calendarEvent.timeInMillis + 60 * 60 * 1000)
         intent.putExtra("title", "Reminder from " + r.creator)
         intent.putExtra("location", "N/A")
@@ -217,6 +185,7 @@ class MainActivity : AppCompatActivity() {
 
     inner class LoadReminderInfoEntries : AsyncTask<String?, String?, List<Reminder>>() {
         override fun doInBackground(vararg params: String?): List<Reminder> {
+            val showAll: Boolean = intent!!.getBooleanExtra("showall", false)
             val db = Room
                 .databaseBuilder(
                     applicationContext,
@@ -225,7 +194,11 @@ class MainActivity : AppCompatActivity() {
                 )
                 //.fallbackToDestructiveMigration()
                 .build()
-            val reminderInfos = db.reminderDao().getReminderInfos()
+            val reminderInfos = if (showAll) {
+                db.reminderDao().getAllReminderInfos()
+            } else {
+                db.reminderDao().getReminderInfos(Calendar.getInstance().time)
+            }
             db.close()
             return reminderInfos
         }
@@ -241,14 +214,14 @@ class MainActivity : AppCompatActivity() {
                     val toast =
                         Toast.makeText(
                             applicationContext,
-                            "No items present now. Populating fake view.",
+                            "No occurred reminders present yet or list is empty.",
                             Toast.LENGTH_SHORT
                         )
                     toast.setGravity(Gravity.BOTTOM, 0, 400)
                     toast.show()
-                    val dummyInfos = dummyList()
-                    val adaptor = ReminderHistoryAdaptor(applicationContext, dummyInfos)
-                    listView.adapter = adaptor
+                    //val dummyInfos = dummyList()
+                    //val adaptor = ReminderHistoryAdaptor(applicationContext, dummyInfos)
+                    //listView.adapter = adaptor
                 }
             }
         }
@@ -265,6 +238,7 @@ class MainActivity : AppCompatActivity() {
                     "Author $i",
                     currentTime(),
                     "Dummy reminder text entry",
+                    false,
                     ByteArray(0)
                 )
             }
@@ -273,18 +247,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        fun showNotification(context: Context, message: String) {
+        fun showNotification(context: Context, title: String, message: String) {
             val channelID = "REMINDER_APP_NOTIFICATION_CHANNEL"
             val notificationId = Random.nextInt(10, 1000) + 5
-            // notificationId += Random(notificationId).nextInt(1, 500)
+
+            // Create an explicit intent for an Activity in your app
+            val intent = Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            }
+            val pendingIntent: PendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
 
             val notificationBuilder = NotificationCompat.Builder(context, channelID)
-                    .setSmallIcon(R.drawable.ic_notif)
-                    .setContentTitle(context.getString(R.string.app_name))
+                    .setSmallIcon(R.drawable.ic_assignment)
+                    .setContentTitle(title)
                     .setContentText(message)
+                    .setLargeIcon(BitmapFactory.decodeResource(context.resources, R.drawable.ic_label_important))
                     .setStyle(NotificationCompat.BigTextStyle().bigText(message))
                     .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setContentIntent(pendingIntent)
                     .setGroup(channelID)
+                    .setAutoCancel(true)
 
             val notificationManager =
                     context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -302,21 +284,33 @@ class MainActivity : AppCompatActivity() {
             }
 
             notificationManager.notify(notificationId, notificationBuilder.build())
-
         }
 
-        fun setReminder(context: Context, uid: Int, timeInMillis: Long, message: String) {
-            val intent = Intent(context, ReminderReceiver::class.java)
-            intent.putExtra("uid", uid)
-            intent.putExtra("message", message)
+        fun setReminder(context: Context, uid: Int, timeInMillis: Long, title: String, message: String) {
+            // Remove old work task if it has been scheduled earlier
+            cancelReminder(context, uid)
 
-            // Create a pending intent to a future action with a unique request code i.e uid
-            val pendingIntent =
-                    PendingIntent.getBroadcast(context, uid, intent, PendingIntent.FLAG_ONE_SHOT)
+            val trimMsg = if (message.length > 37) { message.substring(0,37) + "..." } else { message }
 
-            // Create a service to monitor and execute the future action.
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            alarmManager.setExact(AlarmManager.RTC, timeInMillis, pendingIntent)
+            // Prepare work task
+            val reminderParameters = Data.Builder()
+                    .putString("title", title)
+                    .putString("message", trimMsg)
+                    .putInt("uid", uid)
+                    .build()
+
+            // Get minutes from now until reminder
+            var minutesFromNow = 0L
+            if (timeInMillis > System.currentTimeMillis())
+                minutesFromNow = timeInMillis - System.currentTimeMillis()
+
+            val reminderRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
+                    .setInputData(reminderParameters)
+                    .setInitialDelay(minutesFromNow, TimeUnit.MILLISECONDS)
+                    .addTag(uid.toString())
+                    .build()
+
+            WorkManager.getInstance(context).enqueue(reminderRequest)
         }
 
         fun editReminder(context: Context, rid: Int) {
@@ -326,17 +320,8 @@ class MainActivity : AppCompatActivity() {
             context.startActivity(intent)
         }
 
-        fun cancelReminder(context: Context, pendingIntentId: Int) {
-            val intent = Intent(context, ReminderReceiver::class.java)
-            val pendingIntent =
-                    PendingIntent.getBroadcast(
-                        context,
-                        pendingIntentId,
-                        intent,
-                        PendingIntent.FLAG_ONE_SHOT
-                    )
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            alarmManager.cancel(pendingIntent)
+        fun cancelReminder(context: Context, pendingId: Int) {
+            WorkManager.getInstance(context).cancelAllWorkByTag(pendingId.toString())
         }
     }
 }

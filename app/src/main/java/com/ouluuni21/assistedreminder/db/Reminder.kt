@@ -9,5 +9,6 @@ data class Reminder(
         var creator: String,
         var reminder_time: Date,
         var message: String,
+        var show_notif: Boolean,
         var image: ByteArray
 )

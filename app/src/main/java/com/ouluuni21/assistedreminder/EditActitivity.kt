@@ -98,12 +98,14 @@ class EditActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val format = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+            val dateFormat = "dd.MM.yyyy HH:mm"
+            val format = SimpleDateFormat(dateFormat, Locale.getDefault())
             val datetime: Date = format.parse("$date $time")!!
 
             val creator = findViewById<TextView>(R.id.editReminderAuthor).text.toString()
             val message = findViewById<EditText>(R.id.inpEditReminderMessage).text.toString()
             val image = findViewById<ImageView>(R.id.editThumbnail).drawToBitmap()
+            val doNotif = findViewById<Switch>(R.id.switchEditNotif).isChecked
             val stream = ByteArrayOutputStream()
             image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
             val imageInByte: ByteArray = stream.toByteArray()
@@ -113,17 +115,17 @@ class EditActivity : AppCompatActivity() {
                 creator = creator,
                 reminder_time = datetime,
                 message = message,
+                show_notif = doNotif,
                 image = imageInByte
             )
 
-            // Convert date string value to Date format using dd.mm.yyyy
-            // Here it is assumed that date is in dd.mm.yyyy
-            val dateparts = date.split(".").toTypedArray()
-            val reminderCalender = GregorianCalendar(
-                    dateparts[2].toInt(),
-                    dateparts[1].toInt() - 1,
-                    dateparts[0].toInt()
-            )
+            val reminderCalender = GregorianCalendar.getInstance()
+            reminderCalender.time = datetime
+
+            var isFutureReminder = false
+            if (reminderCalender.timeInMillis > Calendar.getInstance().timeInMillis) {
+                isFutureReminder = true
+            }
 
             AsyncTask.execute {
                 val db = Room.databaseBuilder(
@@ -132,24 +134,29 @@ class EditActivity : AppCompatActivity() {
                         getString(R.string.dbFileName)
                 ).build()
                 db.reminderDao().updateReminderEntry(
-                    reminder.uid, reminder.reminder_time, reminder.message, reminder.image)
+                    reminder.uid, reminder.reminder_time, reminder.message, reminder.show_notif, reminder.image, !isFutureReminder)
                 db.close()
 
                 // Reminder happens in the future set reminder
-                if (reminderCalender.timeInMillis > Calendar.getInstance().timeInMillis) {
+                if (isFutureReminder && doNotif) {
                     // reminder happens in the future set reminder
-                    val notif =
-                            "Reminder for $date has been created."
+                    val title =
+                            "$date $time from ${reminder.creator}"
                     MainActivity.setReminder(
-                            applicationContext,
-                            rid,
-                            reminderCalender.timeInMillis,
-                            notif
+                        applicationContext,
+                        rid,
+                        reminderCalender.timeInMillis,
+                        title,
+                        message
                     )
+                }
+
+                if (!doNotif) {
+                    MainActivity.cancelReminder(applicationContext, rid)
                 }
             }
 
-            if (reminderCalender.timeInMillis > Calendar.getInstance().timeInMillis) {
+            if (isFutureReminder && doNotif) {
                 Toast.makeText(
                         applicationContext,
                         "Reminder for future reminder saved.",
@@ -246,6 +253,7 @@ class EditActivity : AppCompatActivity() {
                 val editTime = findViewById<EditText>(R.id.inpEditReminderTime)
                 val editText = findViewById<EditText>(R.id.inpEditReminderMessage)
                 val editThumbnail = findViewById<ImageView>(R.id.editThumbnail)
+                val showNotif = findViewById<Switch>(R.id.switchEditNotif)
                 val imageStream = ByteArrayInputStream(reminder.image)
                 val theImage = BitmapFactory.decodeStream(imageStream)
 
@@ -253,6 +261,7 @@ class EditActivity : AppCompatActivity() {
                 editDate.setText(convertLongToDate(reminder.reminder_time))
                 editTime.setText(convertLongToTime(reminder.reminder_time))
                 editText.setText(reminder.message)
+                showNotif.setChecked(reminder.show_notif)
                 editThumbnail.setImageBitmap(theImage)
             } else {
                 val toast =

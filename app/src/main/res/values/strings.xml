@@ -34,4 +34,10 @@
     <string name="delete_alert">Do you want to delete reminder for %1$s created by &lt;b>%2$s&lt;/b>?</string>
     <string name="update_image"><u>Update image</u></string>
     <string name="speech_to_text">Speech to text</string>
+    <string name="profile_name">Profile Name</string>
+    <string name="profile_info">Profile Info</string>
+    <string name="show_all">Show all</string>
+    <string name="show_valid">Show valid</string>
+    <string name="avatar">avatar</string>
+
 </resources>

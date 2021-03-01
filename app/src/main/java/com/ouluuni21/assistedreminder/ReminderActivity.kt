@@ -16,6 +16,7 @@ import android.os.Build.*
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.text.InputType
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -42,12 +43,14 @@ class ReminderActivity : AppCompatActivity() {
 
         val uid = refreshView()
 
-        val c = Calendar.getInstance()
-        val year = c.get(Calendar.YEAR)
-        val month = c.get(Calendar.MONTH)
-        val day = c.get(Calendar.DAY_OF_MONTH)
+        val current = Calendar.getInstance()
+        val year = current.get(Calendar.YEAR)
+        val month = current.get(Calendar.MONTH)
+        val day = current.get(Calendar.DAY_OF_MONTH)
         val dateView = findViewById<EditText>(R.id.inpReminderDate)
         dateView.showSoftInputOnFocus = false
+        dateView.inputType = InputType.TYPE_NULL
+        dateView.isClickable = true
         dateView.setOnClickListener {
             val dpd = DatePickerDialog(this, { _, year, monthOfYear, dayOfMonth ->
                 // Display selected date in TextView
@@ -59,8 +62,8 @@ class ReminderActivity : AppCompatActivity() {
             dpd.show()
         }
 
-        val hour = c.get(Calendar.HOUR_OF_DAY)
-        val minute = c.get(Calendar.MINUTE)
+        val hour = current.get(Calendar.HOUR_OF_DAY)
+        val minute = current.get(Calendar.MINUTE)
         val timeView = findViewById<EditText>(R.id.inpReminderTime)
         timeView.showSoftInputOnFocus = false
         timeView.setOnClickListener {
@@ -98,8 +101,9 @@ class ReminderActivity : AppCompatActivity() {
                 // return@setOnClickListener
             }
 
-            val current = Calendar.getInstance().time
-            val format = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
+            val currentCal = Calendar.getInstance()
+            val dateFormat = "dd.MM.yyyy HH:mm"
+            val format = SimpleDateFormat(dateFormat, Locale.getDefault())
             val datetime: Date = format.parse("$date $time")!!
 
             val image = findViewById<ImageView>(R.id.thumbnail).drawToBitmap()
@@ -107,26 +111,27 @@ class ReminderActivity : AppCompatActivity() {
             image.compress(Bitmap.CompressFormat.JPEG, 100, stream)
             val imageInByte: ByteArray = stream.toByteArray()
 
+            val reminderCalender = GregorianCalendar.getInstance()
+            reminderCalender.time = datetime
+
+            val doNotif = findViewById<Switch>(R.id.switchNotif).isChecked
+            var isFutureReminder = false
+            if (reminderCalender.timeInMillis > currentCal.timeInMillis) {
+                isFutureReminder = true
+            }
+
             val message = findViewById<EditText>(R.id.inpReminderMessage).text.toString()
             val reminder = ReminderInfo(
                 null,
                 creator_id = uid,
-                creation_time = current,
+                creation_time = current.time,
                 reminder_time = datetime,
                 message = message,
                 location_x = "",
                 location_y = "",
-                reminder_seen = false,
+                reminder_seen = !isFutureReminder,
+                show_notif = doNotif,
                 image = imageInByte
-            )
-
-            // Convert date  string value to Date format using dd.mm.yyyy
-            // Here it is assumed that date is in dd.mm.yyyy
-            val dateparts = date.split(".").toTypedArray()
-            val reminderCalender = GregorianCalendar(
-                dateparts[2].toInt(),
-                dateparts[1].toInt() - 1,
-                dateparts[0].toInt()
             )
 
             AsyncTask.execute {
@@ -136,23 +141,24 @@ class ReminderActivity : AppCompatActivity() {
                     getString(R.string.dbFileName)
                 ).build()
                 val ruid = db.reminderDao().insert(reminder).toInt()
+                val newReminder = db.reminderDao().getReminderEntry(ruid!!.toInt())
                 db.close()
 
                 // Reminder happens in the future set reminder
-                if (reminderCalender.timeInMillis > Calendar.getInstance().timeInMillis) {
-                    // Reminder happens in the future set reminder
-                    val msg =
-                            "Reminder for $date has been created."
+                if (isFutureReminder && doNotif) {
+                    val title =
+                            "$date $time from ${newReminder.creator}"
                     MainActivity.setReminder(
                         applicationContext,
                         ruid,
                         reminderCalender.timeInMillis,
-                        msg
+                        title,
+                        message
                     )
                 }
             }
 
-            if(reminderCalender.timeInMillis > Calendar.getInstance().timeInMillis){
+            if (isFutureReminder && doNotif) {
                 Toast.makeText(
                     applicationContext,
                     "Reminder for future reminder saved.",
