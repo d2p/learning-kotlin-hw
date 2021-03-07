@@ -22,6 +22,7 @@ import androidx.room.Room
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.android.gms.maps.model.LatLng
 import com.ouluuni21.assistedreminder.db.AppDatabase
 import com.ouluuni21.assistedreminder.db.Reminder
 import java.text.SimpleDateFormat
@@ -238,6 +239,8 @@ class MainActivity : AppCompatActivity() {
                     "Author $i",
                     currentTime(),
                     "Dummy reminder text entry",
+                    0.0,
+                    0.0,
                     false,
                     ByteArray(0)
                 )
@@ -286,7 +289,7 @@ class MainActivity : AppCompatActivity() {
             notificationManager.notify(notificationId, notificationBuilder.build())
         }
 
-        fun setReminder(context: Context, uid: Int, timeInMillis: Long, title: String, message: String) {
+        fun setReminder(context: Context, uid: Int, timeInMillis: Long, title: String, message: String, latLng: LatLng) {
             // Remove old work task if it has been scheduled earlier
             cancelReminder(context, uid)
 
@@ -311,6 +314,8 @@ class MainActivity : AppCompatActivity() {
                     .build()
 
             WorkManager.getInstance(context).enqueue(reminderRequest)
+
+            //MapActivity.createGeoFence(latLng, uid!!)
         }
 
         fun editReminder(context: Context, rid: Int) {

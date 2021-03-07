@@ -39,5 +39,15 @@
     <string name="show_all">Show all</string>
     <string name="show_valid">Show valid</string>
     <string name="avatar">avatar</string>
+    <string name="title_activity_map">Map</string>
+
+    <string name="normal_map">Normal Map</string>
+    <string name="hybrid_map">Hybrid Map</string>
+    <string name="terrain_map">Terrain Map</string>
+    <string name="satellite_map">Satellite Map</string>
+
+    <string name="dropped_pin">Reminder Location</string>
+    <string name="location_coords">Location coords</string>
+    <string name="add_map_location">Add map location</string>
 
 </resources>

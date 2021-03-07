@@ -15,15 +15,15 @@ interface ReminderDao {
     @Query("DELETE FROM reminderInfo WHERE uid = :id")
     fun delete(id: Int)
 
-    @Query("SELECT r.uid, u.username AS creator, r.reminder_time, r.message, r.show_notif, r.image FROM reminderInfo AS r, userInfo as u WHERE u.uid = r.creator_id AND r.reminder_time < :current_time ORDER BY r.reminder_time")
+    @Query("SELECT r.uid, u.username AS creator, r.reminder_time, r.message, r.latitude, r.longitude, r.show_notif, r.image FROM reminderInfo AS r, userInfo as u WHERE u.uid = r.creator_id AND r.reminder_time < :current_time ORDER BY r.reminder_time")
     fun getReminderInfos(current_time: Date): List<Reminder>
 
-    @Query("SELECT r.uid, u.username AS creator, r.reminder_time, r.message, r.show_notif, r.image FROM reminderInfo AS r, userInfo as u WHERE u.uid = r.creator_id ORDER BY r.reminder_time")
+    @Query("SELECT r.uid, u.username AS creator, r.reminder_time, r.message, r.latitude, r.longitude, r.show_notif, r.image FROM reminderInfo AS r, userInfo as u WHERE u.uid = r.creator_id ORDER BY r.reminder_time")
     fun getAllReminderInfos(): List<Reminder>
 
-    @Query("SELECT r.uid, u.username AS creator, r.reminder_time, r.message, r.show_notif, r.image FROM reminderInfo AS r, userInfo as u WHERE u.uid = r.creator_id AND r.uid = :id")
+    @Query("SELECT r.uid, u.username AS creator, r.reminder_time, r.message, r.latitude, r.longitude, r.show_notif, r.image FROM reminderInfo AS r, userInfo as u WHERE u.uid = r.creator_id AND r.uid = :id")
     fun getReminderEntry(id: Int): Reminder
 
-    @Query("UPDATE reminderInfo SET reminder_time = :date, message = :message, show_notif = :showNotif, image = :image, reminder_seen = :isSeen WHERE uid = :id")
-    fun updateReminderEntry(id: Int, date: Date, message: String, showNotif: Boolean, image: ByteArray, isSeen: Boolean)
+    @Query("UPDATE reminderInfo SET reminder_time = :date, message = :message, latitude =:latitude, longitude =:longitude, show_notif = :showNotif, image = :image, reminder_seen = :isSeen WHERE uid = :id")
+    fun updateReminderEntry(id: Int, date: Date, message: String, latitude: Double, longitude: Double, showNotif: Boolean, image: ByteArray, isSeen: Boolean)
 }

@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.drawToBitmap
 import androidx.room.Room
+import com.google.android.gms.maps.model.LatLng
 import com.ouluuni21.assistedreminder.db.AppDatabase
 import com.ouluuni21.assistedreminder.db.ReminderInfo
 import java.io.ByteArrayOutputStream
@@ -35,11 +36,13 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-
 class ReminderActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reminder)
+
+        initLocCoords()
 
         val uid = refreshView()
 
@@ -79,6 +82,10 @@ class ReminderActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnCreate).setOnClickListener {
             Log.d("hw_project", "Create reminder button clicked")
+            // Very quick and dirty way to get latest marker info
+            val sharedPref = applicationContext.getSharedPreferences(
+                    getString(R.string.preference_file), Context.MODE_PRIVATE
+            )
 
             // Validate entry values here
             val date = dateView.text.toString()
@@ -120,6 +127,9 @@ class ReminderActivity : AppCompatActivity() {
                 isFutureReminder = true
             }
 
+            val latitude = sharedPref.getFloat("latitude", 0.0F).toDouble()
+            val longitude = sharedPref.getFloat("longitude", 0.0F).toDouble()
+
             val message = findViewById<EditText>(R.id.inpReminderMessage).text.toString()
             val reminder = ReminderInfo(
                 null,
@@ -127,8 +137,8 @@ class ReminderActivity : AppCompatActivity() {
                 creation_time = current.time,
                 reminder_time = datetime,
                 message = message,
-                location_x = "",
-                location_y = "",
+                location_x = latitude,
+                location_y = longitude,
                 reminder_seen = !isFutureReminder,
                 show_notif = doNotif,
                 image = imageInByte
@@ -144,6 +154,8 @@ class ReminderActivity : AppCompatActivity() {
                 val newReminder = db.reminderDao().getReminderEntry(ruid!!.toInt())
                 db.close()
 
+                val latLng = LatLng(latitude, longitude)
+
                 // Reminder happens in the future set reminder
                 if (isFutureReminder && doNotif) {
                     val title =
@@ -153,7 +165,8 @@ class ReminderActivity : AppCompatActivity() {
                         ruid,
                         reminderCalender.timeInMillis,
                         title,
-                        message
+                        message,
+                        latLng
                     )
                 }
             }
@@ -166,6 +179,10 @@ class ReminderActivity : AppCompatActivity() {
                 ).show()
             }
             finish()
+        }
+
+        findViewById<ImageView>(R.id.addMapLocation).setOnClickListener {
+            this.startActivity(Intent(applicationContext, MapActivity::class.java))
         }
 
         // https://devofandroid.blogspot.com/2018/09/pick-image-from-gallery-android-studio_15.html
@@ -226,6 +243,15 @@ class ReminderActivity : AppCompatActivity() {
         refreshView()
     }
 
+    private fun initLocCoords() {
+        val sharedPref = applicationContext.getSharedPreferences(
+                getString(R.string.preference_file), Context.MODE_PRIVATE
+        )
+
+        sharedPref.edit().putFloat("latitude", 0.0F).apply()
+        sharedPref.edit().putFloat("longitude", 0.0F).apply()
+    }
+
     private fun refreshView(): Int {
         val sharedPref = applicationContext.getSharedPreferences(
             getString(R.string.preference_file), Context.MODE_PRIVATE
@@ -233,6 +259,17 @@ class ReminderActivity : AppCompatActivity() {
         val username = findViewById<TextView>(R.id.reminderAuthor)
         val uid = sharedPref.getInt("Uid", 0)
         username.text = sharedPref.getString("Username", "")
+
+        val latitude = sharedPref.getFloat("latitude", 0.0F).toDouble()
+        val longitude = sharedPref.getFloat("longitude", 0.0F).toDouble()
+
+        val locCoords = findViewById<TextView>(R.id.txtLocCoords)
+        locCoords.text = String.format(
+                Locale.getDefault(),
+                "Lat: %1$.5f\nLng: %2$.5f",
+                latitude,
+                longitude)
+
         return uid
     }
 
@@ -244,12 +281,12 @@ class ReminderActivity : AppCompatActivity() {
     }
 
     companion object {
+        // Record audio request code
+        private const val RECORD_AUDIO_CODE = 1
         // Image pick code
         private const val IMAGE_PICK_CODE = 1000
         // Permission code
         private const val PERMISSION_CODE = 1001
-        // Record audio request code
-        private const val RECORD_AUDIO_CODE = 1
     }
 
     private fun showExplanation(

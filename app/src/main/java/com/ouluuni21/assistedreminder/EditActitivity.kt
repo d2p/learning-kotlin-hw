@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -23,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.drawToBitmap
 import androidx.room.Room
+import com.google.android.gms.maps.model.LatLng
 import com.ouluuni21.assistedreminder.db.AppDatabase
 import com.ouluuni21.assistedreminder.db.Reminder
 import java.io.ByteArrayInputStream
@@ -35,6 +37,9 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 class EditActivity : AppCompatActivity() {
+
+    private lateinit var latLng: LatLng
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit)
@@ -42,7 +47,7 @@ class EditActivity : AppCompatActivity() {
         val rid: Int = intent!!.getIntExtra("rid", 0)
         Log.d("hw_project", "Read extra rid $rid")
 
-        refreshView(rid)
+        initView(rid)
 
         val dateView = findViewById<EditText>(R.id.inpEditReminderDate)
         dateView.showSoftInputOnFocus = false
@@ -115,6 +120,8 @@ class EditActivity : AppCompatActivity() {
                 creator = creator,
                 reminder_time = datetime,
                 message = message,
+                latitude = latLng.latitude,
+                longitude = latLng.longitude,
                 show_notif = doNotif,
                 image = imageInByte
             )
@@ -134,7 +141,8 @@ class EditActivity : AppCompatActivity() {
                         getString(R.string.dbFileName)
                 ).build()
                 db.reminderDao().updateReminderEntry(
-                    reminder.uid, reminder.reminder_time, reminder.message, reminder.show_notif, reminder.image, !isFutureReminder)
+                    reminder.uid, reminder.reminder_time, reminder.message, reminder.latitude,
+                        reminder.longitude, reminder.show_notif, reminder.image, !isFutureReminder)
                 db.close()
 
                 // Reminder happens in the future set reminder
@@ -147,7 +155,8 @@ class EditActivity : AppCompatActivity() {
                         rid,
                         reminderCalender.timeInMillis,
                         title,
-                        message
+                        message,
+                        latLng
                     )
                 }
 
@@ -186,6 +195,10 @@ class EditActivity : AppCompatActivity() {
             }
         }
 
+        findViewById<ImageView>(R.id.addEditMapLocation).setOnClickListener {
+            this.startActivity(Intent(applicationContext, MapActivity::class.java))
+        }
+
         findViewById<TextView>(R.id.editAddThumbnail).setOnClickListener {
             // Check runtime permission
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
@@ -214,9 +227,46 @@ class EditActivity : AppCompatActivity() {
         }
     }
 
-    private fun refreshView(rid: Int) {
+    override fun onResume() {
+        super.onResume()
+        refreshView()
+    }
+
+    private fun refreshView() {
+        val sharedPref = applicationContext.getSharedPreferences(
+                getString(R.string.preference_file), Context.MODE_PRIVATE
+        )
+        val latitude = sharedPref.getFloat("latitude", 0.0F).toDouble()
+        val longitude = sharedPref.getFloat("longitude", 0.0F).toDouble()
+        latLng = LatLng(latitude, longitude)
+        setLocCoords(latLng)
+    }
+
+    private fun initView(rid: Int) {
+        val sharedPref = applicationContext.getSharedPreferences(
+                getString(R.string.preference_file), Context.MODE_PRIVATE
+        )
+
+        sharedPref.edit().putFloat("latitude", 0.0F).apply()
+        sharedPref.edit().putFloat("longitude", 0.0F).apply()
+
         val refreshTask = LoadReminderInfoEntry()
         refreshTask.execute(rid.toString())
+    }
+
+    private fun setLocCoords(it: LatLng) {
+        val locCoords = findViewById<TextView>(R.id.txtEditLocCoords)
+        locCoords.text = String.format(
+                Locale.getDefault(),
+                "Lat: %1$.5f\nLng: %2$.5f",
+                it.latitude,
+                it.longitude)
+
+        val sharedPref = applicationContext.getSharedPreferences(
+                getString(R.string.preference_file), Context.MODE_PRIVATE
+        )
+        sharedPref.edit().putFloat("latitude", it.latitude.toFloat()).apply()
+        sharedPref.edit().putFloat("longitude", it.longitude.toFloat()).apply()
     }
 
     private fun convertLongToDate(time: Date): String {
@@ -263,6 +313,8 @@ class EditActivity : AppCompatActivity() {
                 editText.setText(reminder.message)
                 showNotif.setChecked(reminder.show_notif)
                 editThumbnail.setImageBitmap(theImage)
+                latLng = LatLng(reminder.latitude, reminder.longitude)
+                setLocCoords(latLng)
             } else {
                 val toast =
                         Toast.makeText(applicationContext, "No reminder with such id found.", Toast.LENGTH_SHORT)
