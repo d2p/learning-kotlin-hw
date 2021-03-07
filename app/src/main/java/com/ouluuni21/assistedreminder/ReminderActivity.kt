@@ -1,10 +1,7 @@
 package com.ouluuni21.assistedreminder
 
 import android.Manifest
-import android.app.Activity
-import android.app.AlertDialog
-import android.app.DatePickerDialog
-import android.app.TimePickerDialog
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -25,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.view.drawToBitmap
 import androidx.room.Room
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import com.ouluuni21.assistedreminder.db.AppDatabase
 import com.ouluuni21.assistedreminder.db.ReminderInfo
@@ -154,12 +152,10 @@ class ReminderActivity : AppCompatActivity() {
                 val newReminder = db.reminderDao().getReminderEntry(ruid!!.toInt())
                 db.close()
 
-                val latLng = LatLng(latitude, longitude)
-
                 // Reminder happens in the future set reminder
                 if (isFutureReminder && doNotif) {
-                    val title =
-                            "$date $time from ${newReminder.creator}"
+                    val title = "$date $time from ${newReminder.creator}"
+                    val latLng = LatLng(latitude, longitude)
                     MainActivity.setReminder(
                         applicationContext,
                         ruid,

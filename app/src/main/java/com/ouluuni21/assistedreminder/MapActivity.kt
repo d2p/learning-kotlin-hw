@@ -1,7 +1,6 @@
 package com.ouluuni21.assistedreminder
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
@@ -15,7 +14,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -24,9 +25,6 @@ import com.google.android.gms.maps.model.*
 import java.util.*
 
 const val GEOFENCE_RADIUS = 200
-const val GEOFENCE_ID = "REMINDER_GEOFENCE_ID"
-const val GEOFENCE_EXPIRATION = 10 * 24 * 60 * 60 * 1000 // 10 days
-const val GEOFENCE_DWELL_DELAY =  10 * 1000 // 10 secs
 const val CAMERA_ZOOM_LEVEL = 13f
 
 class MapActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -35,10 +33,13 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
     private val LOCATION_PERMISSION_CODE = 2001
     private val GEOFENCE_LOCATION_REQUEST_CODE = 2002
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var geofencingClient: GeofencingClient
 
     private lateinit var reminderMarker: Marker
     private lateinit var reminderArea: Circle
+
+    private var mLocationRequest: LocationRequest? = null
+    private val UPDATE_INTERVAL = (10 * 1000).toLong()  /* 10 secs */
+    private val FASTEST_INTERVAL: Long = 2000 /* 2 sec */
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,12 +50,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        geofencingClient = LocationServices.getGeofencingClient(this)
     }
 
-    @SuppressLint("MissingPermission")
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
         map.uiSettings.isZoomControlsEnabled = true
@@ -62,16 +59,46 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         val currentCity = LatLng(78.22210201886925, 15.639839392797546)
         map.addMarker(MarkerOptions().position(currentCity).title("Welcome to Svalbard"))
 
-        enableMyLocation()
+        if (!isPermissionGranted()) {
+            val permissions = mutableListOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            }
+            ActivityCompat.requestPermissions(
+                    this,
+                    permissions.toTypedArray(),
+                    LOCATION_PERMISSION_CODE
+            )
+        } else {
+            if (ActivityCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                            this,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return
+            }
+            this.map.isMyLocationEnabled = true
 
-        if (map.isMyLocationEnabled) {
             // Zoom to last known location
             fusedLocationClient.lastLocation.addOnSuccessListener {
                 val latLng = loadReminderLocation()
                 if (latLng.latitude != 0.0) {
                     setReminderLocation(map, latLng)
                 }
-                else if (it != null && currentCity == null) {
+                else if (it != null) {
                     with(map) {
                         val curLoc = LatLng(it.latitude, it.longitude)
                         moveCamera(CameraUpdateFactory.newLatLngZoom(curLoc, CAMERA_ZOOM_LEVEL))
@@ -197,47 +224,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun createGeoFence(location: LatLng, key: String) {
-        val geofence = Geofence.Builder()
-            .setRequestId(GEOFENCE_ID)
-            .setCircularRegion(location.latitude, location.longitude, GEOFENCE_RADIUS.toFloat())
-            .setExpirationDuration(GEOFENCE_EXPIRATION.toLong())
-            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL)
-            .setLoiteringDelay(GEOFENCE_DWELL_DELAY)
-            .build()
-
-        val geofenceRequest = GeofencingRequest.Builder()
-            .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-            .addGeofence(geofence)
-            .build()
-/*
-        val intent = Intent(this, GeofenceReceiver::class.java)
-            .putExtra("key", key)
-            .putExtra("message", "Geofence alert - ${location.latitude}, ${location.longitude}")
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            applicationContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT
-        )
-*/
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (ContextCompat.checkSelfPermission(
-                    applicationContext, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                ) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(
-                        Manifest.permission.ACCESS_BACKGROUND_LOCATION
-                    ),
-                    GEOFENCE_LOCATION_REQUEST_CODE
-                )
-            } else {
-                //map.geofencingClient.addGeofences(geofenceRequest, pendingIntent)
-            }
-        } else {
-            //map.geofencingClient.addGeofences(geofenceRequest, pendingIntent)
-        }
-    }
-
     private fun isPermissionGranted(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
@@ -246,26 +232,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             this,
             Manifest.permission.ACCESS_COARSE_LOCATION
         ) != PackageManager.PERMISSION_GRANTED
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun enableMyLocation() {
-        if (isPermissionGranted()) {
-            map.isMyLocationEnabled = true
-        } else {
-            val permissions = mutableListOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            }
-            ActivityCompat.requestPermissions(
-                this,
-                permissions.toTypedArray(),
-                LOCATION_PERMISSION_CODE
-            )
-        }
     }
 
     override fun onRequestPermissionsResult(
@@ -279,8 +245,19 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                         grantResults[0] == PackageManager.PERMISSION_GRANTED ||
                         grantResults[1] == PackageManager.PERMISSION_GRANTED)
                 ) {
+                    if (ActivityCompat.checkSelfPermission(
+                                    this,
+                                    Manifest.permission.ACCESS_FINE_LOCATION
+                            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                                    this,
+                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                            ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        return
+                    }
                     // Permission from popup granted
-                    enableMyLocation()
+                    map.isMyLocationEnabled = true
+                    onMapReady(map)
                 } else {
                     // Permission from popup denied
                     Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show()
@@ -296,15 +273,26 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             }
         }
-    }
 
-    companion object {
-        fun removeGeofences(context: Context, triggeringGeofenceList: MutableList<Geofence>) {
-            val geofenceIdList = mutableListOf<String>()
-            for (entry in triggeringGeofenceList) {
-                geofenceIdList.add(entry.requestId)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(
+                            applicationContext, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                    ) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                        this,
+                        arrayOf(
+                                Manifest.permission.ACCESS_BACKGROUND_LOCATION
+                        ),
+                        GEOFENCE_LOCATION_REQUEST_CODE
+                )
             }
-            LocationServices.getGeofencingClient(context).removeGeofences(geofenceIdList)
+            if (grantResults.isNotEmpty() && grantResults[2] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(
+                        this,
+                        "This application needs background location to work on Android 10 and higher",
+                        Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 }

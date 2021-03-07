@@ -1,5 +1,6 @@
 package com.ouluuni21.assistedreminder
 
+import android.annotation.SuppressLint
 import android.app.*
 import android.content.Context
 import android.content.Intent
@@ -22,6 +23,10 @@ import androidx.room.Room
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingClient
+import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
 import com.ouluuni21.assistedreminder.db.AppDatabase
 import com.ouluuni21.assistedreminder.db.Reminder
@@ -30,12 +35,22 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
+const val GEOFENCE_ID = "REMINDER_GEOFENCE_ID"
+const val GEOFENCE_PRETIME = 5 * 60 * 1000 // 0 for now
+const val GEOFENCE_EXPIRATION = 3 * 60 * 60 * 1000 // 3 hours
+const val GEOFENCE_DWELL_DELAY =  10 * 1000 // 10 secs
+const val MOTIF_MESSAGE_LENGTH = 37
+
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var geofencingClient: GeofencingClient
     private lateinit var listView: ListView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        geofencingClient = LocationServices.getGeofencingClient(this)
 
         val showAll: Boolean = intent!!.getBooleanExtra("showall", false)
 
@@ -250,6 +265,51 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
+        @SuppressLint("MissingPermission")
+        fun createGeoFence(context: Context, location: LatLng, key: String, title: String, timeInMillis: Long) {
+            Log.d("hw_project", "Created geofence job for $key")
+
+            val geofence = Geofence.Builder()
+                    .setRequestId(GEOFENCE_ID)
+                    .setCircularRegion(location.latitude, location.longitude, GEOFENCE_RADIUS.toFloat())
+                    // Set expiration to the reminder time + some hours
+                    .setExpirationDuration(timeInMillis + GEOFENCE_EXPIRATION.toLong())
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL)
+                    .setLoiteringDelay(GEOFENCE_DWELL_DELAY)
+                    .build()
+
+            val geofenceRequest = GeofencingRequest.Builder()
+                    .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER) // + GeofencingRequest.INITIAL_TRIGGER_DWELL)
+                    .addGeofence(geofence)
+                    .build()
+
+            val loc = String.format(
+                    Locale.getDefault(),
+                    "Lat: %1$.5f, Lng: %2$.5f",
+                    location.latitude,
+                    location.longitude
+            )
+
+            val intent = Intent(context, GeofenceReceiver::class.java)
+                    .putExtra("key", key)
+                    .putExtra("title", title)
+                    .putExtra("message", "Geofence alert - $loc")
+
+            val pendingIntent = PendingIntent.getBroadcast(
+                    context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT
+            )
+
+            LocationServices.getGeofencingClient(context).addGeofences(geofenceRequest, pendingIntent)
+        }
+
+        fun removeGeofences(context: Context, triggeringGeofenceList: MutableList<Geofence>) {
+            val geofenceIdList = mutableListOf<String>()
+            for (entry in triggeringGeofenceList) {
+                geofenceIdList.add(entry.requestId)
+            }
+            LocationServices.getGeofencingClient(context).removeGeofences(geofenceIdList)
+        }
+
         fun showNotification(context: Context, title: String, message: String) {
             val channelID = "REMINDER_APP_NOTIFICATION_CHANNEL"
             val notificationId = Random.nextInt(10, 1000) + 5
@@ -289,44 +349,56 @@ class MainActivity : AppCompatActivity() {
             notificationManager.notify(notificationId, notificationBuilder.build())
         }
 
-        fun setReminder(context: Context, uid: Int, timeInMillis: Long, title: String, message: String, latLng: LatLng) {
+        fun setReminder(context: Context, rid: Int, timeInMillis: Long, title: String, message: String, latLng: LatLng) {
             // Remove old work task if it has been scheduled earlier
-            cancelReminder(context, uid)
+            cancelReminder(context, rid)
 
-            val trimMsg = if (message.length > 37) { message.substring(0,37) + "..." } else { message }
+            if (latLng.latitude != 0.0 && latLng.longitude != 0.0) {
+                Log.d("hw_project", "Create location notification reminder $rid")
+                createGeoFence(context, latLng, rid.toString(), title, timeInMillis)
+            }
+            else {
+                Log.d("hw_project", "Create timed notification reminder $rid")
 
-            // Prepare work task
-            val reminderParameters = Data.Builder()
-                    .putString("title", title)
-                    .putString("message", trimMsg)
-                    .putInt("uid", uid)
-                    .build()
+                val trimMsg = if (message.length > MOTIF_MESSAGE_LENGTH) {
+                    message.substring(0, MOTIF_MESSAGE_LENGTH) + "..."
+                } else {
+                    message
+                }
 
-            // Get minutes from now until reminder
-            var minutesFromNow = 0L
-            if (timeInMillis > System.currentTimeMillis())
-                minutesFromNow = timeInMillis - System.currentTimeMillis()
+                // Prepare work task
+                val reminderParameters = Data.Builder()
+                        .putString("title", title)
+                        .putString("message", trimMsg)
+                        .putInt("uid", rid)
+                        .build()
 
-            val reminderRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
-                    .setInputData(reminderParameters)
-                    .setInitialDelay(minutesFromNow, TimeUnit.MILLISECONDS)
-                    .addTag(uid.toString())
-                    .build()
+                // Get minutes from now until reminder
+                var minutesFromNow = 0L
+                if (timeInMillis > System.currentTimeMillis())
+                    minutesFromNow = timeInMillis - System.currentTimeMillis()
 
-            WorkManager.getInstance(context).enqueue(reminderRequest)
+                val reminderRequest = OneTimeWorkRequestBuilder<ReminderWorker>()
+                        .setInputData(reminderParameters)
+                        .setInitialDelay(minutesFromNow, TimeUnit.MILLISECONDS)
+                        .addTag(rid.toString())
+                        .build()
 
-            //MapActivity.createGeoFence(latLng, uid!!)
+                WorkManager.getInstance(context).enqueue(reminderRequest)
+            }
         }
 
         fun editReminder(context: Context, rid: Int) {
             val intent = Intent(context, EditActivity::class.java)
             intent.putExtra("rid", rid)
-            Log.d("hw_project", "Set rid to $rid")
+            Log.d("hw_project", "Edit timed reminder $rid")
             context.startActivity(intent)
         }
 
-        fun cancelReminder(context: Context, pendingId: Int) {
-            WorkManager.getInstance(context).cancelAllWorkByTag(pendingId.toString())
+        fun cancelReminder(context: Context, rid: Int) {
+            Log.d("hw_project", "Remove timed notification reminder $rid")
+            WorkManager.getInstance(context).cancelAllWorkByTag(rid.toString())
+            // TODO removing respective geofence
         }
     }
 }

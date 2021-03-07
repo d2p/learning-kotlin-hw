@@ -147,9 +147,8 @@ class EditActivity : AppCompatActivity() {
 
                 // Reminder happens in the future set reminder
                 if (isFutureReminder && doNotif) {
+                    val title = "$date $time from ${reminder.creator}"
                     // reminder happens in the future set reminder
-                    val title =
-                            "$date $time from ${reminder.creator}"
                     MainActivity.setReminder(
                         applicationContext,
                         rid,
