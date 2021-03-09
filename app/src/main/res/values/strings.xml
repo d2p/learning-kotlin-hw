@@ -49,5 +49,6 @@
     <string name="dropped_pin">Reminder Location</string>
     <string name="location_coords">Location coords</string>
     <string name="add_map_location">Add map location</string>
+    <string name="mock_location">Mock location</string>
 
 </resources>

@@ -243,7 +243,6 @@ class ReminderActivity : AppCompatActivity() {
         val sharedPref = applicationContext.getSharedPreferences(
                 getString(R.string.preference_file), Context.MODE_PRIVATE
         )
-
         sharedPref.edit().putFloat("latitude", 0.0F).apply()
         sharedPref.edit().putFloat("longitude", 0.0F).apply()
     }

@@ -56,8 +56,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         map = googleMap
         map.uiSettings.isZoomControlsEnabled = true
 
-        val currentCity = LatLng(78.22210201886925, 15.639839392797546)
-        map.addMarker(MarkerOptions().position(currentCity).title("Welcome to Svalbard"))
+        val currentCity = LatLng(65.05993246473764, 25.467624998875436)
+        map.addMarker(MarkerOptions().position(currentCity).title("Welcome to Oulu Uni"))
 
         if (!isPermissionGranted()) {
             val permissions = mutableListOf(
@@ -76,7 +76,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
             if (ActivityCompat.checkSelfPermission(
                             this,
                             Manifest.permission.ACCESS_FINE_LOCATION
-                    ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                    ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
                             this,
                             Manifest.permission.ACCESS_COARSE_LOCATION
                     ) != PackageManager.PERMISSION_GRANTED
@@ -248,7 +248,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
                     if (ActivityCompat.checkSelfPermission(
                                     this,
                                     Manifest.permission.ACCESS_FINE_LOCATION
-                            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                            ) != PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
                                     this,
                                     Manifest.permission.ACCESS_COARSE_LOCATION
                             ) != PackageManager.PERMISSION_GRANTED

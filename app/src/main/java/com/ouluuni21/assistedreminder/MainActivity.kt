@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 const val GEOFENCE_ID = "REMINDER_GEOFENCE_ID"
-const val GEOFENCE_PRETIME = 5 * 60 * 1000 // 0 for now
+const val GEOFENCE_PRETIME = 30 * 60 * 1000 // 30 mins for now
 const val GEOFENCE_EXPIRATION = 3 * 60 * 60 * 1000 // 3 hours
 const val GEOFENCE_DWELL_DELAY =  10 * 1000 // 10 secs
 const val MOTIF_MESSAGE_LENGTH = 37
@@ -274,7 +274,7 @@ class MainActivity : AppCompatActivity() {
                     .setCircularRegion(location.latitude, location.longitude, GEOFENCE_RADIUS.toFloat())
                     // Set expiration to the reminder time + some hours
                     .setExpirationDuration(timeInMillis + GEOFENCE_EXPIRATION.toLong())
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_DWELL)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER) // or Geofence.GEOFENCE_TRANSITION_DWELL)
                     .setLoiteringDelay(GEOFENCE_DWELL_DELAY)
                     .build()
 
@@ -303,6 +303,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fun removeGeofences(context: Context, triggeringGeofenceList: MutableList<Geofence>) {
+            Log.d("hw_project", "Geofence event removed")
             val geofenceIdList = mutableListOf<String>()
             for (entry in triggeringGeofenceList) {
                 geofenceIdList.add(entry.requestId)
