@@ -35,7 +35,6 @@ class GeofenceReceiver : BroadcastReceiver() {
                     message = intent.getStringExtra("message")!!
                 }
 
-                Log.d("hw_project", "Geofence event for $key and $message")
 /*
                 val firebase = Firebase.database(getString(R.string.db_url))
                 val reference = firebase.getReference("reminders")
@@ -58,10 +57,10 @@ class GeofenceReceiver : BroadcastReceiver() {
                 val child = reference.child(key)
                 child.addValueEventListener(reminderListener)
 */
-                val notifyTask = LoadReminderInfoEntry()
-                notifyTask.execute(key)
+                LoadReminderInfoEntry().execute(key).get()
 
                 // Remove geofence
+                Log.d("hw_project", "onReceive isNotifable: $isNotifable")
                 if (isNotifable) {
                     val triggeringGeofences = geofencingEvent.triggeringGeofences
                     MainActivity.removeGeofences(context, triggeringGeofences)
@@ -83,11 +82,7 @@ class GeofenceReceiver : BroadcastReceiver() {
                     .build()
             val reminder = db.reminderDao().getReminderEntry(rid!!.toInt())
             db.close()
-            return reminder
-        }
 
-        override fun onPostExecute(reminder: Reminder?) {
-            super.onPostExecute(reminder)
             if (reminder != null) {
                 val reminderCalender = GregorianCalendar.getInstance()
                 reminderCalender.time = reminder.reminder_time
@@ -96,6 +91,7 @@ class GeofenceReceiver : BroadcastReceiver() {
                 if ((reminderCalender.timeInMillis - GEOFENCE_PRETIME) <=
                         Calendar.getInstance().timeInMillis) {
                     isNotifable = true
+                    Log.d("hw_project", "Location spotted and the time is right")
                 }
                 if (isNotifable) {
                     val trimMsg = if (reminder.message.length > MOTIF_MESSAGE_LENGTH) {
@@ -109,9 +105,12 @@ class GeofenceReceiver : BroadcastReceiver() {
                                     title,
                                     message + "\n" + trimMsg
                             )
-                    // MainActivity.cancelReminder(applicationContext, key.toInt())
+                }
+                else {
+                    Log.d("hw_project", "Location spotted but the time is not there yet")
                 }
             }
+            return reminder
         }
     }
 }

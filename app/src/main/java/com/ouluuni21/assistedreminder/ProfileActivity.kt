@@ -30,6 +30,7 @@ class ProfileActivity : AppCompatActivity() {
         setContentView(R.layout.activity_profile)
 
         mContext = applicationContext
+        mHandler = Handler()
 
         mLocationManager = mContext!!.getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
@@ -74,9 +75,8 @@ class ProfileActivity : AppCompatActivity() {
         val sharedPref = applicationContext.getSharedPreferences(
                 getString(R.string.preference_file), Context.MODE_PRIVATE
         )
-
-        sharedPref.edit().putFloat("latitude", 65.05993246473764F).apply()
-        sharedPref.edit().putFloat("longitude", 25.467624998875436F).apply()
+        sharedPref.edit().putFloat("latitude", 65.02274437270525F).apply()
+        sharedPref.edit().putFloat("longitude", 25.455896352141004F).apply()
 
         stopMockLocationUpdates()
     }
@@ -143,16 +143,16 @@ class ProfileActivity : AppCompatActivity() {
 
     fun startMockLocationUpdates(latitude: Double, longitude: Double) {
         mRunnable = Runnable {
-            Log.w("hw_project", "startMockLocationUpdates for lat:$latitude lng:$longitude");
+            //Log.w("hw_project", "startMockLocationUpdates for lat:$latitude lng:$longitude");
             setMock(LocationManager.GPS_PROVIDER, latitude, longitude)
             setMock(LocationManager.NETWORK_PROVIDER, latitude, longitude)
-            mHandler!!.postDelayed(mRunnable, 500)
+            mHandler!!.postDelayed(mRunnable, 1000)
         }
         mHandler!!.post(mRunnable)
     }
 
     fun stopMockLocationUpdates() {
-        Log.w("hw_project", "stopMockLocationUpdates");
+        //Log.w("hw_project", "stopMockLocationUpdates");
         mHandler!!.removeCallbacks(mRunnable)
         try {
             mLocationManager!!.removeTestProvider(LocationManager.GPS_PROVIDER)
@@ -174,12 +174,10 @@ class ProfileActivity : AppCompatActivity() {
                    true,
                    0,
                    5)
-        } catch (e: SecurityException) {
-            Log.w("hw_project", "addTestProvider" + e.message);
-        }
+        } catch (e: IllegalArgumentException) { }
         try {
             mLocationManager!!.setTestProviderEnabled(provider, true)
-        } catch (e: SecurityException) {
+        } catch (e: IllegalArgumentException) {
             Log.w("hw_project", "setTestProviderEnabled" + e.message);
         }
 
@@ -200,7 +198,7 @@ class ProfileActivity : AppCompatActivity() {
         try {
             //mLocationManager!!.requestLocationUpdates(provider, 0, 0, this);
             mLocationManager!!.setTestProviderLocation(provider, newLocation)
-        } catch (e: SecurityException) {
+        } catch (e: IllegalArgumentException) {
             Log.w("hw_project", "setTestProviderEnabled" + e.message);
             e.printStackTrace()
         }

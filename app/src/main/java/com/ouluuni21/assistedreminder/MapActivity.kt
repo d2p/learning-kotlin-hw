@@ -56,7 +56,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback {
         map = googleMap
         map.uiSettings.isZoomControlsEnabled = true
 
-        val currentCity = LatLng(65.05993246473764, 25.467624998875436)
+        val currentCity = LatLng(65.02274437270525, 25.455896352141004)
         map.addMarker(MarkerOptions().position(currentCity).title("Welcome to Oulu Uni"))
 
         if (!isPermissionGranted()) {

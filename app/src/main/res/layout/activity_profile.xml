@@ -13,7 +13,7 @@
         android:text="@string/logout_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/profileName"
         app:layout_constraintVertical_bias="0.17" />
@@ -28,7 +28,7 @@
         android:textSize="28sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageView"
         app:layout_constraintVertical_bias="0.098" />
@@ -57,7 +57,7 @@
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txtUserHeader"
         app:layout_constraintVertical_bias="0.07"
@@ -73,7 +73,8 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/logout" />
+        app:layout_constraintTop_toBottomOf="@+id/txtMockLocCoords"
+        app:layout_constraintVertical_bias="0.653" />
 
     <ImageView
         android:id="@+id/addMockMapLocation"
@@ -82,27 +83,25 @@
         android:layout_alignParentStart="true"
         android:contentDescription="@string/add_map_location"
         android:scaleType="centerCrop"
-        app:layout_constraintBottom_toTopOf="@+id/btnMockLocation"
+        app:layout_constraintBottom_toTopOf="@+id/txtMockLocCoords"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/logout"
-        app:layout_constraintVertical_bias="0.404"
         app:srcCompat="@drawable/ic_add_location" />
 
     <TextView
         android:id="@+id/txtMockLocCoords"
         android:layout_width="68dp"
         android:layout_height="38dp"
-        android:layout_marginBottom="20dp"
+        android:gravity="center"
         android:hint="@string/location_coords"
         android:text=""
-        android:gravity="center"
         android:textSize="8sp"
         android:textStyle="italic"
         app:layout_constraintBottom_toTopOf="@+id/btnMockLocation"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/addMockMapLocation"
         app:layout_constraintVertical_bias="0.0" />
